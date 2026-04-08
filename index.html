@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a1628">
+<title>EVM — Concursos</title>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0a1628;--navy2:#112240;--navy3:#1a3460;--gold:#c9a84c;--gold-l:#e8c97a;--white:#f8f6f1;--gray:#8892a4;--gray2:#4a5568;--borda:rgba(201,168,76,0.2);--ok:#4caf82;--erro:#e05252;--r:14px;--rsm:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);height:100dvh;overflow:hidden;font-size:16px}
+.tela{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--navy);transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);overflow:hidden;will-change:transform}
+.tela.ativa{transform:translateX(0)!important}
+.tela.saindo{transform:translateX(-22%)!important}
+#tela-login{transform:translateX(0)}
+.tela::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 120% 30% at 50% 0%,rgba(201,168,76,0.07) 0%,transparent 65%);pointer-events:none;z-index:0}
+.hdr{position:relative;z-index:10;display:flex;align-items:center;gap:10px;padding:16px 18px 14px;border-bottom:1px solid var(--borda);min-height:58px;flex-shrink:0;margin-top:env(safe-area-inset-top,22px)}
+.hdr-logo{display:flex;flex-direction:column}
+.hdr-titulo{font-family:'Raleway',sans-serif;font-weight:900;font-size:0.9rem;color:var(--gold);letter-spacing:-0.02em;line-height:1}
+.hdr-sub{font-size:0.55rem;color:var(--gray);letter-spacing:0.06em;text-transform:uppercase;margin-top:2px}
+.hdr-flex{flex:1}
+.hdr-nome{font-family:'Raleway',sans-serif;font-weight:800;font-size:1rem;color:var(--white);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-voltar{width:34px;height:34px;border-radius:50%;border:1px solid var(--borda);background:var(--navy2);color:var(--gold);font-size:1.15rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.15s}
+.btn-ico{width:36px;height:36px;border-radius:50%;border:1px solid var(--borda);background:var(--navy2);color:var(--gray);font-size:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.btn-ico.ouro{color:var(--gold);border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.08);font-size:1.3rem;font-weight:900}
+.btn-ico.red{color:var(--erro);border-color:rgba(224,82,82,0.3)}
+.btn-ico:active,.btn-voltar:active{transform:scale(0.9)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative;z-index:1}
+/* LOGIN */
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;gap:28px}
+.login-shield{width:82px;height:82px;background:var(--navy2);border:2.5px solid var(--gold);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2.3rem;box-shadow:0 0 40px rgba(201,168,76,0.12)}
+.login-titulo{font-family:'Raleway',sans-serif;font-weight:900;font-size:1.7rem;color:var(--gold);text-align:center;letter-spacing:-0.02em}
+.login-sub{font-size:0.8rem;color:var(--gray);letter-spacing:0.04em;text-align:center;margin-top:4px}
+.login-card{width:100%;background:var(--navy2);border:1px solid var(--borda);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:14px}
+.login-hint{font-size:0.82rem;color:var(--gray);text-align:center}
+.login-erro{font-size:0.85rem;color:var(--erro);text-align:center;min-height:18px}
+/* GOOGLE BUTTON */
+.google-btn{width:100%;padding:14px 20px;background:#fff;border:none;border-radius:var(--rsm);color:#3c4043;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.25);transition:box-shadow 0.15s,opacity 0.15s}
+.google-btn:hover{box-shadow:0 4px 14px rgba(0,0,0,0.3)}
+.google-btn:active{opacity:0.85}
+.google-btn:disabled{opacity:0.5;cursor:not-allowed}
+/* BOTÕES */
+.btn-p{width:100%;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--navy);border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-p:disabled{opacity:0.38;cursor:not-allowed}
+.btn-p:active:not(:disabled){opacity:0.82}
+.btn-s{width:100%;padding:13px;border-radius:var(--rsm);border:1.5px solid var(--borda);background:transparent;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+.btn-s:active{border-color:var(--gold);color:var(--gold)}
+/* BUSCA */
+.busca-wrap{padding:12px 16px 6px;position:relative}
+.busca-icon{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:0.9rem;pointer-events:none}
+.inp-busca{width:100%;padding:12px 14px 12px 40px;background:var(--navy2);border:1.5px solid var(--borda);border-radius:24px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:0.95rem}
+.inp-busca:focus{outline:none;border-color:var(--gold)}
+.inp-busca::placeholder{color:var(--gray2)}
+/* CARDS CONCURSO */
+.cc{margin:0 16px 12px;background:var(--navy2);border:1px solid var(--borda);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color 0.15s,transform 0.12s;position:relative;overflow:hidden}
+.cc::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);border-radius:var(--r) var(--r) 0 0}
+.cc.incompleto::after{background:var(--gray2)}
+.cc:active{transform:scale(0.985);border-color:var(--gold)}
+.cc-topo{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.cc-nome{font-family:'Raleway',sans-serif;font-weight:800;font-size:1.05rem;color:var(--white);flex:1;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cc-chev{color:var(--gray2);font-size:0.75rem;margin-top:3px;flex-shrink:0}
+.cc-mun{font-size:0.85rem;color:var(--gold);font-weight:600;margin-bottom:4px}
+.cc-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cc-vara{font-size:0.75rem;color:var(--gray);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-info{font-size:0.75rem;color:var(--gray2);margin-top:6px}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0}
+.b-ok{background:rgba(76,175,130,0.18);color:var(--ok);border:1px solid rgba(76,175,130,0.3)}
+.b-gray{background:rgba(136,146,164,0.18);color:var(--gray);border:1px solid rgba(136,146,164,0.25)}
+.b-gold{background:rgba(201,168,76,0.18);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
+.b-red{background:rgba(224,82,82,0.18);color:var(--erro);border:1px solid rgba(224,82,82,0.3)}
+/* STEPPER */
+.stepper{display:flex;align-items:flex-start;padding:14px 20px 0;gap:0}
+.step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;position:relative}
+.step-c{width:32px;height:32px;border-radius:50%;border:2px solid var(--gray2);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:var(--gray);background:var(--navy);font-weight:700;position:relative;z-index:1;transition:all 0.3s;font-family:'Raleway',sans-serif}
+.step-c.ativo{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1)}
+.step-c.feito{background:var(--ok);border-color:var(--ok);color:var(--navy)}
+.step-l{font-size:0.6rem;color:var(--gray);text-align:center;line-height:1.25;max-width:54px}
+.step-l.ativo{color:var(--gold)}
+.step-ln{flex:1;height:2px;background:var(--gray2);margin:0 -4px;margin-top:-22px;z-index:0;transition:background 0.3s}
+.step-ln.feita{background:var(--ok)}
+/* FORM */
+.form-sec{padding:16px;display:flex;flex-direction:column;gap:14px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fr2{display:flex;gap:10px}
+.fr2>.fg{flex:1}
+.fl{font-size:0.75rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em}
+.fl span{color:var(--erro)}
+.fi{width:100%;padding:14px 15px;background:var(--navy2);border:1.5px solid var(--borda);border-radius:var(--rsm);color:var(--white);font-family:'DM Sans',sans-serif;font-size:1rem;transition:border-color 0.2s}
+.fi:focus{outline:none;border-color:var(--gold)}
+.fi::placeholder{color:var(--gray2)}
+.fi-sel{width:100%;padding:14px 15px;background:var(--navy2);border:1.5px solid var(--borda);border-radius:var(--rsm);color:var(--white);font-family:'DM Sans',sans-serif;font-size:1rem;appearance:none;cursor:pointer}
+.fi-sel:focus{outline:none;border-color:var(--gold)}
+.fi-ta{width:100%;padding:14px 15px;background:var(--navy2);border:1.5px solid var(--borda);border-radius:var(--rsm);color:var(--white);font-family:'DM Sans',sans-serif;font-size:1rem;resize:vertical;min-height:88px;transition:border-color 0.2s}
+.fi-ta:focus{outline:none;border-color:var(--gold)}
+.fhint{font-size:0.72rem;color:var(--gray2);margin-top:-3px}
+.ferr{font-size:0.85rem;color:var(--erro);text-align:center;min-height:18px}
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 15px;background:var(--navy2);border:1.5px solid var(--borda);border-radius:var(--rsm)}
+.toggle-lbl-txt{font-size:1rem;color:var(--white)}
+.toggle-track{width:52px;height:28px;border-radius:14px;background:var(--gray2);border:none;cursor:pointer;position:relative;transition:background 0.25s;flex-shrink:0}
+.toggle-track.on{background:var(--gold)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.25s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.toggle-track.on .toggle-thumb{transform:translateX(24px)}
+/* DOC CARD */
+.doc-card{background:var(--navy2);border:1.5px solid var(--borda);border-radius:var(--r);overflow:hidden}
+.doc-hdr{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.doc-num{font-family:'Raleway',sans-serif;font-weight:900;font-size:1rem;color:var(--gold);width:50px;flex-shrink:0}
+.doc-info{flex:1;display:flex;flex-direction:column;gap:2px}
+.doc-lbl{font-size:0.92rem;font-weight:600;color:var(--white)}
+.doc-sub{font-size:0.75rem;color:var(--gray)}
+.doc-body{padding:12px 15px;display:flex;flex-direction:column;gap:10px}
+.upload-area{border:2px dashed rgba(201,168,76,0.28);border-radius:var(--rsm);padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:78px;justify-content:center}
+.upload-area:hover,.upload-area:active{border-color:var(--gold);background:rgba(201,168,76,0.04)}
+.upload-area.ok{border-color:rgba(76,175,130,0.5);background:rgba(76,175,130,0.05)}
+.upload-icon{font-size:1.6rem}
+.upload-txt{font-size:0.83rem;color:var(--gray)}
+.upload-nome{font-size:0.78rem;color:var(--ok);font-weight:600;display:none;word-break:break-all;padding:0 8px}
+.upload-nome.vis{display:block}
+/* PRINT AREA */
+.print-area{border:2px dashed rgba(126,184,247,0.3);border-radius:var(--rsm);padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.print-area:hover{border-color:#7eb8f7;background:rgba(126,184,247,0.04)}
+.print-area.ok{border-color:rgba(76,175,130,0.5);background:rgba(76,175,130,0.05)}
+.print-nome{font-size:0.78rem;color:var(--ok);font-weight:600;display:none;word-break:break-all}
+.print-nome.vis{display:block}
+/* CARGO CARD */
+.cargo-card{margin:0 16px 10px;background:var(--navy2);border:1px solid var(--borda);border-radius:var(--r);padding:14px 15px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:12px}
+.cargo-card:active{transform:scale(0.978);border-color:var(--gold)}
+.cargo-card.incr{border-color:rgba(76,175,130,0.28)}
+.cargo-ico{font-size:1.25rem;flex-shrink:0}
+.cargo-info{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.cargo-nome{font-family:'Raleway',sans-serif;font-weight:800;font-size:1rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cargo-det{font-size:0.78rem;color:var(--gray)}
+.cargo-chev{color:var(--gray2);font-size:0.78rem;flex-shrink:0}
+.btn-add{margin:0 16px 12px;padding:13px;border:2px dashed rgba(201,168,76,0.32);border-radius:var(--r);background:transparent;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);transition:all 0.2s}
+.btn-add:active{background:rgba(201,168,76,0.07);border-color:var(--gold)}
+/* NAV ETAPAS */
+.nav-et{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--borda);background:var(--navy);flex-shrink:0}
+.nav-et .btn-p,.nav-et .btn-s{flex:1}
+/* INFO SECTION */
+.info-sec{margin:0 16px;background:var(--navy2);border:1px solid var(--borda);border-radius:var(--r);overflow:hidden}
+.ir{display:flex;align-items:flex-start;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.035);gap:10px}
+.ir:last-child{border-bottom:none}
+.ir-l{font-size:0.72rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;width:95px;flex-shrink:0;padding-top:2px}
+.ir-v{font-size:0.92rem;color:var(--white);font-weight:400;flex:1;word-break:break-word;line-height:1.45}
+.ir-v a{color:var(--gold);text-decoration:none}
+/* RESUMO */
+.resumo{margin:14px 16px 0;background:linear-gradient(135deg,var(--navy2),var(--navy3));border:1px solid var(--borda);border-radius:var(--r);padding:18px 16px}
+.resumo-juris{font-family:'Raleway',sans-serif;font-weight:900;font-size:1.15rem;color:var(--white);line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.resumo-vara{font-size:0.82rem;color:var(--gold);margin-top:5px}
+.resumo-gest{font-size:0.8rem;color:var(--gray);margin-top:4px}
+.resumo-stats{display:flex;gap:20px;margin-top:14px;flex-wrap:wrap}
+.rs{display:flex;flex-direction:column;gap:2px}
+.rs-v{font-family:'Raleway',sans-serif;font-weight:900;font-size:1.5rem;color:var(--gold);line-height:1}
+.rs-l{font-size:0.68rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em}
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.68);z-index:600;display:flex;align-items:flex-end;justify-content:center}
+.modal-sheet{background:var(--navy2);border-top:2px solid var(--gold);border-radius:18px 18px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 20px);width:100%;max-width:500px;display:flex;flex-direction:column;gap:14px;animation:suUp 0.25s cubic-bezier(0.4,0,0.2,1);max-height:80vh;overflow-y:auto}
+@keyframes suUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-titulo{font-family:'Raleway',sans-serif;font-weight:800;font-size:1.15rem;color:var(--white)}
+/* ALERTA */
+.alerta{border-radius:var(--rsm);padding:14px 16px;font-size:0.88rem;line-height:1.5}
+.alerta-gold{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);color:var(--gold-l)}
+.alerta-ok{background:rgba(76,175,130,0.08);border:1px solid rgba(76,175,130,0.25);color:var(--ok)}
+.alerta-tit{font-weight:700;margin-bottom:3px;font-size:0.92rem}
+/* STITLE */
+.stitle{font-size:0.72rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;padding:16px 16px 8px}
+/* SPINNER / TOAST */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.25);border-top-color:currentColor;border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast-wrap{position:fixed;top:34px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:90%;max-width:380px}
+.toast{padding:10px 18px;border-radius:24px;font-size:0.82rem;font-weight:600;background:#1a2e48;border:1.5px solid var(--borda);color:var(--white);opacity:0;transform:translateY(-8px);transition:all 0.22s;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+.toast.vis{opacity:1;transform:translateY(0)}
+.toast.ok{background:#1a4a35;border-color:var(--ok)}
+.toast.err{background:#4a1a1a;border-color:var(--erro)}
+.toast.gold{background:#3a2e10;border-color:var(--gold)}
+.empty{text-align:center;padding:44px 32px;color:var(--gray)}
+.empty-ico{font-size:2.5rem;margin-bottom:12px}
+.empty-txt{font-size:0.85rem;line-height:1.65}
+.loading{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 32px;color:var(--gray);font-size:0.85rem}
+.hidden{display:none!important}
+.pb24{padding-bottom:24px}
+</style>
+</head>
+<body>
+
+<!-- Hidden file inputs -->
+<input type="file" id="fi-doc04" accept=".pdf,application/pdf" class="hidden">
+<input type="file" id="fi-doc07" accept=".pdf,application/pdf" class="hidden">
+<input type="file" id="fi-doc08" accept=".pdf,application/pdf" class="hidden">
+<input type="file" id="fi-doc09" accept=".pdf,application/pdf" class="hidden">
+<input type="file" id="fi-doc10" accept=".pdf,application/pdf" class="hidden">
+<input type="file" id="fi-print1" accept="image/*" class="hidden">
+<input type="file" id="fi-print2" accept="image/*" class="hidden">
+
+<div id="toast-wrap"></div>
+
+<!-- Modal novo cargo -->
+<div id="modal-cargo" class="modal-ov hidden" onclick="fecharModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-titulo">➕ Novo cargo</div>
+    <div class="fg">
+      <label class="fl">Nome do cargo</label>
+      <input class="fi" id="nc-nome" type="text" placeholder="Ex: CIRURGIÃO DENTISTA" autocomplete="off"
+        style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      <span class="fhint">Em maiúsculas, como aparece no edital</span>
+    </div>
+    <div class="ferr" id="nc-erro"></div>
+    <button class="btn-p" onclick="confirmarCargo()">Confirmar</button>
+    <button class="btn-s" onclick="g('modal-cargo').classList.add('hidden')">Cancelar</button>
+  </div>
+</div>
+
+<!-- T1: LOGIN -->
+<div id="tela-login" class="tela ativa">
+  <div class="login-wrap">
+    <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px">
+      <div class="login-shield">⚖️</div>
+      <div>
+        <div class="login-titulo">EVM — Concursos</div>
+        <div class="login-sub">Aquino Ribeiro Advocacia · OAB/PB 12.237</div>
+      </div>
+    </div>
+    <div class="login-card">
+      <div class="login-hint">Acesso restrito ao escritório</div>
+      <button class="google-btn" id="btn-glogin" onclick="login()" disabled>
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <span id="glogin-txt">Aguardando Google...</span>
+      </button>
+      <div id="login-loading" class="loading hidden">
+        <div class="spinner" style="color:var(--gold)"></div>
+        <span>Inicializando sistema...</span>
+      </div>
+      <div class="login-erro" id="login-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- T2: LISTA -->
+<div id="tela-lista" class="tela">
+  <div class="hdr">
+    <div class="hdr-logo">
+      <span class="hdr-titulo">🏛️ Concursos</span>
+      <span class="hdr-sub">Aquino Ribeiro Advocacia</span>
+    </div>
+    <div class="hdr-flex"></div>
+    <button class="btn-ico ouro" onclick="abrirNovo()" title="Novo concurso">＋</button>
+    <button class="btn-ico red" onclick="logout()" title="Sair">⏻</button>
+  </div>
+  <div class="busca-wrap">
+    <span class="busca-icon">🔍</span>
+    <input class="inp-busca" id="inp-busca" type="search" placeholder="Buscar município ou jurisdicionado..." oninput="filtrar(this.value)">
+  </div>
+  <div class="scroll pb24" id="lista-wrap">
+    <div class="loading"><div class="spinner" style="color:var(--gold)"></div><span>Carregando...</span></div>
+  </div>
+</div>
+
+<!-- T3: CADASTRO -->
+<div id="tela-cad" class="tela">
+  <div class="hdr">
+    <button class="btn-voltar" onclick="confirmarVoltar()">‹</button>
+    <span class="hdr-nome" id="cad-titulo">Novo Concurso</span>
+  </div>
+  <div class="stepper">
+    <div class="step"><div class="step-c ativo" id="sc1">1</div><div class="step-l ativo" id="sl1">Dados do<br>Processo</div></div>
+    <div class="step-ln" id="sln1"></div>
+    <div class="step"><div class="step-c" id="sc2">2</div><div class="step-l" id="sl2">Documentos</div></div>
+    <div class="step-ln" id="sln2"></div>
+    <div class="step"><div class="step-c" id="sc3">3</div><div class="step-l" id="sl3">Controle<br>TCE</div></div>
+    <div class="step-ln" id="sln3"></div>
+    <div class="step"><div class="step-c" id="sc4">4</div><div class="step-l" id="sl4">Cargos</div></div>
+  </div>
+  <div class="scroll" id="cad-scroll">
+    <!-- ETAPA 1 -->
+    <div id="et1" class="form-sec">
+      <div class="fg">
+        <label class="fl">Jurisdicionado</label>
+        <input class="fi" id="f-juris" type="text" placeholder="Ex: Prefeitura Municipal de Alagoa Nova" oninput="autoMun()">
+        <span class="fhint">Município extraído automaticamente</span>
+      </div>
+      <input type="hidden" id="f-mun"><input type="hidden" id="f-mun-m">
+      <div class="fg">
+        <label class="fl">CNPJ</label>
+        <input class="fi" id="f-cnpj" type="text" placeholder="00.000.000/0001-00" oninput="mCNPJ(this)" maxlength="18">
+      </div>
+      <div class="fg">
+        <label class="fl">Vara / Competência</label>
+        <input class="fi" id="f-vara" type="text" placeholder="Ex: Vara Única de Alagoa Nova - PB">
+        <span class="fhint">Pode ser diferente da comarca do município</span>
+      </div>
+      <div class="fg">
+        <label class="fl">Representação</label>
+        <select class="fi-sel" id="f-sexo">
+          <option value="">Selecione...</option>
+          <option value="o Prefeito Constitucional">o Prefeito Constitucional</option>
+          <option value="a Prefeita Constitucional">a Prefeita Constitucional</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Nome do gestor</label>
+        <input class="fi" id="f-gestor" type="text" placeholder="NOME COMPLETO EM MAIÚSCULAS"
+          style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="fg">
+        <label class="fl">Endereço da sede administrativa</label>
+        <textarea class="fi-ta" id="f-end" placeholder="na sede da Prefeitura Municipal de ..., com endereço na Rua X, n. Y - Centro, Cidade-PB, CEP 00.000-000"></textarea>
+        <span class="fhint">Texto exato que aparece na petição</span>
+      </div>
+      <!-- Bloco financeiro -->
+      <div class="fg">
+        <label class="fl">Contrato padrão?</label>
+        <div class="toggle-row">
+          <span class="toggle-lbl-txt" id="toggle-txt">Não</span>
+          <button class="toggle-track" id="toggle-contr" onclick="toggleContr()" type="button" aria-label="Contrato padrão">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+      </div>
+      <div id="bloco-fin" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+        <div class="fg">
+          <label class="fl">Tipo de honorários</label>
+          <select class="fi-sel" id="f-tipo">
+            <option value="A">A — Tudo no sucesso (entrada R$ 0)</option>
+            <option value="B">B — Pagamento único no ato</option>
+            <option value="C">C — Entrada no ato + parcelas no sucesso</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Entrada (R$)</label>
+          <input class="fi" id="f-entrada" type="text" placeholder="R$ 0,00" oninput="mSalario(this)">
+        </div>
+        <div class="fr2">
+          <div class="fg"><label class="fl">Nº de parcelas</label><input class="fi" id="f-parcelas" type="number" min="1" max="24" placeholder="6"></div>
+          <div class="fg"><label class="fl">Valor por parcela</label><input class="fi" id="f-valparc" type="text" placeholder="R$ 0,00" oninput="mSalario(this)"></div>
+        </div>
+      </div>
+      <div class="ferr" id="err1"></div>
+    </div>
+
+    <!-- ETAPA 2 -->
+    <div id="et2" class="form-sec hidden">
+      <div class="doc-card">
+        <div class="doc-hdr">
+          <div class="doc-num">Doc 04</div>
+          <div class="doc-info"><div class="doc-lbl">Diploma do Representante Legal</div><div class="doc-sub">Doc 04 - Diploma do Representante Legal.pdf</div></div>
+          <span class="badge b-gray" id="bd04">Pendente</span>
+        </div>
+        <div class="doc-body">
+          <div class="upload-area" id="ua04" onclick="uploadDoc('04','Doc 04 - Diploma do Representante Legal.pdf','fi-doc04')">
+            <span class="upload-icon">📋</span>
+            <span class="upload-txt">Toque para anexar o diploma do prefeito(a)</span>
+            <span class="upload-nome" id="un04"></span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-hdr">
+          <div class="doc-num">Doc 07</div>
+          <div class="doc-info"><div class="doc-lbl">Edital do Concurso</div><div class="doc-sub">Doc 07 - Edital do Concurso.pdf</div></div>
+          <span class="badge b-gray" id="bd07">Pendente</span>
+        </div>
+        <div class="doc-body">
+          <div class="fg">
+            <label class="fl">Como o município identificou o edital</label>
+            <input class="fi" id="f-d07n" type="text" placeholder="Ex: Edital Normativo nº 001/2023-PMAN/PB">
+            <span class="fhint">Aparece na petição: "[nome] (Doc. 07)"</span>
+          </div>
+          <div class="fg"><label class="fl">Link externo (opcional)</label><input class="fi" id="f-d07l" type="url" placeholder="https://..."></div>
+          <div class="upload-area" id="ua07" onclick="uploadDoc('07',()=>'Doc 07 - '+(gv('f-d07n')||'Edital do Concurso')+'.pdf','fi-doc07')">
+            <span class="upload-icon">📄</span><span class="upload-txt">Toque para anexar o edital</span>
+            <span class="upload-nome" id="un07"></span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-hdr">
+          <div class="doc-num">Doc 08</div>
+          <div class="doc-info"><div class="doc-lbl">Resultado Final</div><div class="doc-sub">Doc 08 - Resultado Final.pdf</div></div>
+          <span class="badge b-gray" id="bd08">Pendente</span>
+        </div>
+        <div class="doc-body">
+          <div class="fg">
+            <label class="fl">Como está identificado o resultado</label>
+            <input class="fi" id="f-d08n" type="text" placeholder="Ex: Resultado Final - Retificado">
+          </div>
+          <div class="fg"><label class="fl">Link externo (opcional)</label><input class="fi" id="f-d08l" type="url" placeholder="https://..."></div>
+          <div class="upload-area" id="ua08" onclick="uploadDoc('08',()=>'Doc 08 - '+(gv('f-d08n')||'Resultado Final')+'.pdf','fi-doc08')">
+            <span class="upload-icon">📊</span><span class="upload-txt">Toque para anexar o resultado final</span>
+            <span class="upload-nome" id="un08"></span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-hdr">
+          <div class="doc-num">Doc 09</div>
+          <div class="doc-info"><div class="doc-lbl">Homologação do Concurso</div><div class="doc-sub">Doc 09 - Homologação do Concurso.pdf</div></div>
+          <span class="badge b-gray" id="bd09">Pendente</span>
+        </div>
+        <div class="doc-body">
+          <div class="fg">
+            <label class="fl">Como está identificado o documento</label>
+            <input class="fi" id="f-d09n" type="text" placeholder="Ex: Decreto Municipal n. 15/2024">
+          </div>
+          <div class="fg"><label class="fl">Link externo (opcional)</label><input class="fi" id="f-d09l" type="url" placeholder="https://..."></div>
+          <div class="upload-area" id="ua09" onclick="uploadDoc('09',()=>'Doc 09 - '+(gv('f-d09n')||'Homologação do Concurso')+'.pdf','fi-doc09')">
+            <span class="upload-icon">✅</span><span class="upload-txt">Toque para anexar a homologação</span>
+            <span class="upload-nome" id="un09"></span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-hdr">
+          <div class="doc-num">Doc 10</div>
+          <div class="doc-info"><div class="doc-lbl">Lei de Cargos</div><div class="doc-sub">Doc 10 - Lei de Cargos.pdf</div></div>
+          <span class="badge b-gray" id="bd10">Pendente</span>
+        </div>
+        <div class="doc-body">
+          <div class="fg">
+            <label class="fl">Como está identificada a lei</label>
+            <input class="fi" id="f-d10n" type="text" placeholder="Ex: Lei Complementar Municipal n.º 84/2023">
+          </div>
+          <div class="fg"><label class="fl">Link externo (opcional)</label><input class="fi" id="f-d10l" type="url" placeholder="https://..."></div>
+          <div class="upload-area" id="ua10" onclick="uploadDoc('10',()=>'Doc 10 - '+(gv('f-d10n')||'Lei de Cargos')+'.pdf','fi-doc10')">
+            <span class="upload-icon">📜</span><span class="upload-txt">Toque para anexar a lei de cargos</span>
+            <span class="upload-nome" id="un10"></span>
+          </div>
+        </div>
+      </div>
+      <div class="ferr" id="err2"></div>
+    </div>
+
+    <!-- ETAPA 3 -->
+    <div id="et3" class="form-sec hidden">
+      <div class="fg"><label class="fl">Número do Proc. Tramita</label><input class="fi" id="f-trn" type="text" placeholder="Ex: 01084/24"></div>
+      <div class="fg"><label class="fl">Link do Tramita</label><input class="fi" id="f-trl" type="url" placeholder="https://tramita.tce.pb.gov.br/..."></div>
+      <div class="fg">
+        <label class="fl">Caminho da Transparência</label>
+        <textarea class="fi-ta" id="f-tpc" style="min-height:70px;" placeholder='na sessão "Transparência", sub-sessão "Pessoal"'></textarea>
+        <span class="fhint">Texto exato que aparece na petição</span>
+      </div>
+      <div class="fg"><label class="fl">Link da Transparência</label><input class="fi" id="f-tpl" type="url" placeholder="https://..."></div>
+      <div class="ferr" id="err3"></div>
+    </div>
+
+    <!-- ETAPA 4 -->
+    <div id="et4" class="hidden pb24">
+      <div class="stitle">Cargos do concurso</div>
+      <div id="lista-cargos-cad"></div>
+      <button class="btn-add" onclick="abrirModalCargo('form')">＋ Adicionar cargo</button>
+      <div class="ferr" id="err4" style="padding:0 16px;"></div>
+    </div>
+  </div>
+  <div class="nav-et">
+    <button class="btn-s hidden" id="btn-vol-et" onclick="etAnterior()">← Voltar</button>
+    <button class="btn-p" id="btn-av-et" onclick="proxEtapa()">Avançar →</button>
+  </div>
+</div>
+
+<!-- T4: FICHA DO CONCURSO -->
+<div id="tela-ficha" class="tela">
+  <div class="hdr">
+    <button class="btn-voltar" onclick="voltar()">‹</button>
+    <span class="hdr-nome" id="fh-titulo">Concurso</span>
+    <div class="hdr-flex"></div>
+    <button class="btn-ico" onclick="editarConcurso()" style="color:var(--gold);" title="Editar">✏️</button>
+  </div>
+  <div class="scroll pb24" id="fh-conteudo"></div>
+</div>
+
+<!-- T5: FICHA DO CARGO -->
+<div id="tela-cargo" class="tela">
+  <div class="hdr">
+    <button class="btn-voltar" onclick="voltar()">‹</button>
+    <span class="hdr-nome" id="fc-titulo">Cargo</span>
+  </div>
+  <div class="scroll pb24" id="fc-conteudo"></div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+// EVM — Cadastro de Concursos  v2
+// ─── CONFIGURAÇÃO ──────────────────────────────────────────────
+// 1. Crie um projeto no Google Cloud Console
+// 2. Ative as APIs: Google Drive API e Google Sheets API
+// 3. Crie credenciais OAuth 2.0 > Aplicativo da Web
+// 4. Adicione a URL onde este HTML está hospedado em "Origens JavaScript autorizadas"
+// 5. Substitua o valor abaixo pelo seu Client ID
+const CLIENT_ID   = 'COLE_SEU_CLIENT_ID_AQUI.apps.googleusercontent.com';
+const ROOT_FOLDER = '1t4YuhSbghSqTjIet8x9LHHsu4raEUwvP';
+const SCOPES      = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
+
+// ─── ESTADO ────────────────────────────────────────────────────
+const S = {
+  token: null, tokenExp: 0,
+  sheetId: null, docsFolderId: null, cadFolderId: null,
+  concursos: [], concurso: null, cargo: null,
+  etapa: 1, modo: 'novo', cargosTemp: [],
+  contrP: false, prints: {}, modalCtx: 'form',
+};
+const hist = [];
+let tokenClient = null;
+
+// ─── GOOGLE AUTH ────────────────────────────────────────────────
+function gisLoaded() {
+  if (CLIENT_ID.startsWith('COLE_')) {
+    g('login-err').textContent = '⚠️ Configure o CLIENT_ID no topo do arquivo JS.';
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: onToken,
+    error_callback: (err) => {
+      toast('Erro OAuth: ' + (err.type || err.message || JSON.stringify(err)), 'err', 6000);
+      resetLoginBtn();
+    },
+  });
+  g('btn-glogin').disabled = false;
+  g('glogin-txt').textContent = 'Entrar com Google';
+}
+
+function onToken(resp) {
+  if (resp.error) {
+    toast('Falha na autenticação: ' + resp.error, 'err');
+    resetLoginBtn();
+    return;
+  }
+  S.token = resp.access_token;
+  S.tokenExp = Date.now() + (resp.expires_in - 60) * 1000;
+  postLogin();
+}
+
+function resetLoginBtn() {
+  const btn = g('btn-glogin');
+  btn.disabled = false;
+  g('glogin-txt').textContent = 'Entrar com Google';
+  g('login-loading').classList.add('hidden');
+}
+
+function login() {
+  g('btn-glogin').disabled = true;
+  g('glogin-txt').textContent = 'Aguardando...';
+  tokenClient.requestAccessToken({ prompt: S.token ? '' : 'select_account' });
+}
+
+async function logout() {
+  if (S.token) { try { google.accounts.oauth2.revoke(S.token); } catch(_) {} }
+  Object.assign(S, { token: null, tokenExp: 0, sheetId: null, docsFolderId: null, cadFolderId: null, concursos: [], concurso: null, cargo: null });
+  hist.length = 0;
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa', 'saindo'));
+  g('tela-login').classList.add('ativa');
+  resetLoginBtn();
+}
+
+async function ensureToken() {
+  if (S.token && Date.now() < S.tokenExp) return;
+  return new Promise(resolve => {
+    const prev = tokenClient.callback;
+    tokenClient.callback = resp => {
+      tokenClient.callback = prev;
+      if (!resp.error) { S.token = resp.access_token; S.tokenExp = Date.now() + (resp.expires_in - 60) * 1000; }
+      resolve();
+    };
+    tokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+// ─── POST LOGIN ─────────────────────────────────────────────────
+async function postLogin() {
+  g('btn-glogin').classList.add('hidden');
+  g('login-loading').classList.remove('hidden');
+  try {
+    S.docsFolderId = await findOrCreateFolder('Documentos Concursos', ROOT_FOLDER);
+    S.sheetId      = await getOrCreateSpreadsheet();
+    await loadAllData();
+    ir('lista', renderLista);
+  } catch(err) {
+    toast('Erro ao inicializar: ' + err.message, 'err', 8000);
+    g('login-err').textContent = 'Tente novamente. Se persistir, verifique as permissões do Google.';
+    g('login-loading').classList.add('hidden');
+    g('btn-glogin').classList.remove('hidden');
+    resetLoginBtn();
+  }
+}
+
+// ─── API ────────────────────────────────────────────────────────
+async function api(method, url, body, params) {
+  await ensureToken();
+  const qs = params ? '?' + new URLSearchParams(params) : '';
+  const opts = { method, headers: { Authorization: 'Bearer ' + S.token } };
+  if (body !== null && body !== undefined) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(url + qs, opts);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => String(res.status));
+    throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 250));
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('json') ? res.json() : res.text();
+}
+
+async function driveFiles(method, body, params) {
+  return api(method, 'https://www.googleapis.com/drive/v3/files', body, params);
+}
+async function drivePatch(id, body, params) {
+  return api('PATCH', `https://www.googleapis.com/drive/v3/files/${id}`, body, params);
+}
+async function sheetsGet(range) {
+  return api('GET', `https://sheets.googleapis.com/v4/spreadsheets/${S.sheetId}/values/${encodeURIComponent(range)}`);
+}
+async function sheetsPut(range, values) {
+  return api('PUT', `https://sheets.googleapis.com/v4/spreadsheets/${S.sheetId}/values/${encodeURIComponent(range)}`, { values }, { valueInputOption: 'USER_ENTERED' });
+}
+async function sheetsAppend(sheet, row) {
+  return api('POST', `https://sheets.googleapis.com/v4/spreadsheets/${S.sheetId}/values/${encodeURIComponent(sheet + '!A1')}:append`, { values: [row] }, { valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS' });
+}
+async function sheetsBatch(requests) {
+  return api('POST', `https://sheets.googleapis.com/v4/spreadsheets/${S.sheetId}:batchUpdate`, { requests });
+}
+async function uploadToDrive(file, name, folderId) {
+  await ensureToken();
+  const meta = { name, parents: [folderId] };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+  form.append('file', file);
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + S.token },
+    body: form,
+  });
+  if (!res.ok) throw new Error('Upload falhou: ' + res.status);
+  return res.json();
+}
+
+// ─── DRIVE FOLDERS ──────────────────────────────────────────────
+async function findOrCreateFolder(name, parentId) {
+  const safe = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const q = `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const res = await driveFiles('GET', null, { q, fields: 'files(id)', pageSize: 1 });
+  if (res.files && res.files.length) return res.files[0].id;
+  const f = await driveFiles('POST', { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }, { fields: 'id' });
+  return f.id;
+}
+async function getConcursoFolder(juris) {
+  if (!S.cadFolderId) {
+    S.cadFolderId = await findOrCreateFolder('Documentos - ' + juris, S.docsFolderId);
+  }
+  return S.cadFolderId;
+}
+
+// ─── SHEETS SETUP ───────────────────────────────────────────────
+const HDR_CONC  = ['Município','Jurisdicionado','CNPJ','Vara','Gestor','Tratamento','Endereço','Doc07 Nome','Doc07 Link','Doc08 Nome','Doc08 Link','Doc09 Nome','Doc09 Link','Doc10 Nome','Doc10 Link','Tramita Nº','Tramita Link','Transparência Caminho','Transparência Link','Contrato Padrão','Tipo','Entrada (R$)','Parcelas','Valor Parcela (R$)','Status','Data Cadastro','ID Pasta Drive','Cargos'];
+const HDR_CARGO = ['Município','Nome do Cargo','Vagas AC','Vagas PCD','Total na Lei','Salário (R$)','Pág. Edital','Pág. Lei','Qtd. na Lei','Link Pasta Drive','Data Incremento','ID Pasta Drive'];
+
+async function getOrCreateSpreadsheet() {
+  const q = `name='Controle de Concursos' and '${S.docsFolderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
+  const res = await driveFiles('GET', null, { q, fields: 'files(id)', pageSize: 1 });
+  if (res.files && res.files.length) return res.files[0].id;
+  // Create in the correct folder directly
+  const f = await driveFiles('POST', {
+    name: 'Controle de Concursos',
+    mimeType: 'application/vnd.google-apps.spreadsheet',
+    parents: [S.docsFolderId],
+  }, { fields: 'id' });
+  const sid = f.id;
+  // Setup sheets structure
+  await api('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`, {
+    requests: [
+      { updateSheetProperties: { properties: { sheetId: 0, title: 'Concursos' }, fields: 'title' } },
+      { addSheet: { properties: { title: 'Cargos' } } },
+    ]
+  });
+  await api('PUT', `https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent('Concursos!A1')}`, { values: [HDR_CONC] }, { valueInputOption: 'RAW' });
+  await api('PUT', `https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent('Cargos!A1')}`, { values: [HDR_CARGO] }, { valueInputOption: 'RAW' });
+  return sid;
+}
+
+// ─── DATA LOAD ──────────────────────────────────────────────────
+function r(row, i) { return (row[i] || '').toString().trim(); }
+
+async function loadAllData() {
+  const [cr, cgr] = await Promise.all([
+    sheetsGet('Concursos!A2:AB5000'),
+    sheetsGet('Cargos!A2:L5000'),
+  ]);
+  const concRows  = (cr.values  || []);
+  const cargoRows = (cgr.values || []);
+  // Index cargos por município
+  const byMun = {};
+  cargoRows.forEach((row, i) => {
+    const mun = r(row, 0);
+    if (!byMun[mun]) byMun[mun] = [];
+    byMun[mun].push({
+      rowIndex: i + 2, id: 'cg' + (i + 2),
+      mun: r(row,0), nome: r(row,1),
+      vagasAC: parseInt(r(row,2)) || 0, vagasPCD: parseInt(r(row,3)) || 0,
+      vagasCargo: parseInt(r(row,4)) || null,
+      salario: r(row,5), pagEd: parseInt(r(row,6)) || null,
+      pagLei: parseInt(r(row,7)) || null, qtdLei: parseInt(r(row,8)) || null,
+      linkPasta: r(row,9), dataIncr: r(row,10), folderId: r(row,11),
+      incr: true, p1: true, p2: true,
+    });
+  });
+  S.concursos = concRows.map((row, i) => {
+    const mun = r(row, 0);
+    const incr = byMun[mun] || [];
+    const nIncr = new Set(incr.map(x => x.nome));
+    const nomes = r(row, 27).split('|').filter(Boolean);
+    const naoIncr = nomes.filter(n => !nIncr.has(n)).map(n => ({
+      id: 'ni_' + n, nome: n, incr: false,
+      vagasAC: 0, vagasPCD: 0, vagasCargo: null, salario: '',
+      pagEd: null, pagLei: null, qtdLei: null, p1: false, p2: false,
+    }));
+    const cargos = [...incr, ...naoIncr];
+    return {
+      rowIndex: i + 2, id: 'c' + (i + 2),
+      mun, munM: mun.toUpperCase(), juris: r(row,1), cnpj: r(row,2),
+      vara: r(row,3), gestor: r(row,4), sexo: r(row,5), end: r(row,6),
+      d07n: r(row,7), d07l: r(row,8), d08n: r(row,9), d08l: r(row,10),
+      d09n: r(row,11), d09l: r(row,12), d10n: r(row,13), d10l: r(row,14),
+      trn: r(row,15), trl: r(row,16), tpc: r(row,17), tpl: r(row,18),
+      contrP: r(row,19) || 'N', tipo: r(row,20),
+      entrada: r(row,21), parcelas: r(row,22), valParc: r(row,23),
+      status: r(row,24) || 'Ativo', dataCad: r(row,25), folderId: r(row,26),
+      cargos, ok: cargos.length > 0 && cargos.every(x => x.incr),
+    };
+  });
+}
+
+// ─── SAVE CONCURSO ──────────────────────────────────────────────
+function concToRow(c, cargosTemp) {
+  const nomes = (cargosTemp || c.cargos || []).map(x => x.nome).join('|');
+  return [
+    c.mun, c.juris, c.cnpj, c.vara, c.gestor, c.sexo, c.end,
+    c.d07n, c.d07l, c.d08n, c.d08l, c.d09n, c.d09l, c.d10n, c.d10l,
+    c.trn, c.trl, c.tpc, c.tpl,
+    c.contrP || 'N', c.tipo || '', c.entrada || '', c.parcelas || '', c.valParc || '',
+    c.status || 'Ativo', c.dataCad || hoje(), c.folderId || '', nomes,
+  ];
+}
+
+async function salvarConc() {
+  const juris = gv('f-juris'), mun = autoMun(true);
+  if (!juris) { toast('Informe o Jurisdicionado primeiro', 'gold'); return; }
+  const btn = g('btn-av-et');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando...';
+  try {
+    const c = {
+      mun, munM: mun.toUpperCase(), juris, cnpj: gv('f-cnpj'), vara: gv('f-vara'),
+      gestor: gv('f-gestor'), sexo: g('f-sexo').value, end: gv('f-end'),
+      d07n: gv('f-d07n'), d07l: gv('f-d07l'), d08n: gv('f-d08n'), d08l: gv('f-d08l'),
+      d09n: gv('f-d09n'), d09l: gv('f-d09l'), d10n: gv('f-d10n'), d10l: gv('f-d10l'),
+      trn: gv('f-trn'), trl: gv('f-trl'), tpc: gv('f-tpc'), tpl: gv('f-tpl'),
+      contrP: S.contrP ? 'S' : 'N',
+      tipo:    S.contrP ? (g('f-tipo') ? g('f-tipo').value : '') : '',
+      entrada: S.contrP ? gv('f-entrada') : '',
+      parcelas: S.contrP ? gv('f-parcelas') : '',
+      valParc:  S.contrP ? gv('f-valparc') : '',
+      folderId: S.cadFolderId || (S.modo === 'edit' && S.concurso ? S.concurso.folderId : '') || '',
+      status: 'Ativo', dataCad: hoje(),
+    };
+    const row = concToRow(c, S.cargosTemp);
+    if (S.modo === 'edit' && S.concurso) {
+      await sheetsPut(`Concursos!A${S.concurso.rowIndex}:AB${S.concurso.rowIndex}`, [row]);
+      Object.assign(S.concurso, c);
+      S.concurso.cargos = mergeCargos(S.concurso, S.cargosTemp);
+      S.concurso.ok = S.concurso.cargos.length > 0 && S.concurso.cargos.every(x => x.incr);
+      toast('✅ Concurso atualizado!', 'ok');
+      setTimeout(() => { voltar(); renderFicha(S.concurso); }, 600);
+    } else {
+      const res = await sheetsAppend('Concursos', row);
+      const m = res.updates && res.updates.updatedRange && res.updates.updatedRange.match(/\d+$/);
+      c.rowIndex = m ? parseInt(m[0]) : S.concursos.length + 2;
+      c.id = 'c' + c.rowIndex;
+      c.cargos = S.cargosTemp.map(x => Object.assign({}, x, { incr: false }));
+      S.concursos.unshift(c);
+      toast('✅ Concurso cadastrado!', 'ok');
+      setTimeout(() => { voltar(); renderLista(); }, 600);
+    }
+  } catch(err) {
+    toast('Erro ao salvar: ' + err.message, 'err', 7000);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Salvar Concurso';
+  }
+}
+
+function mergeCargos(concurso, cargosTemp) {
+  const map = {};
+  (concurso.cargos || []).filter(x => x.incr).forEach(c => { map[c.nome] = c; });
+  return cargosTemp.map(x => map[x.nome] ? Object.assign({}, map[x.nome]) : Object.assign({}, x, { incr: false }));
+}
+
+// ─── SAVE CARGO (INCREMENTO) ─────────────────────────────────────
+async function salvarIncr(cargoNome) {
+  const c = S.concurso; if (!c) return;
+  const vac  = parseInt(gv('i-vac'))  || 0;
+  const vpc  = parseInt(gv('i-vpc'))  || 0;
+  const vcl  = parseInt(gv('i-vcl'))  || null;
+  const sal  = gv('i-sal');
+  const ped  = parseInt(gv('i-ped'))  || null;
+  const plei = parseInt(gv('i-plei')) || null;
+  const qlei = parseInt(gv('i-qlei')) || null;
+  const err  = g('err-incr');
+  if (!sal || !ped || !plei || !qlei || !vcl) {
+    err.textContent = 'Preencha todos os campos obrigatórios.'; return;
+  }
+  err.textContent = '';
+  const btn = document.querySelector('#fc-conteudo .btn-p');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando...'; }
+  try {
+    // Pasta do concurso
+    if (!c.folderId) {
+      c.folderId = await getConcursoFolder(c.juris);
+      await sheetsPut(`Concursos!AA${c.rowIndex}`, [[c.folderId]]);
+    }
+    // Pasta do cargo
+    const cargoFolderId = await findOrCreateFolder(cargoNome.toUpperCase(), c.folderId);
+    const linkPasta = `https://drive.google.com/drive/folders/${cargoFolderId}`;
+    const cargoObj = c.cargos.find(x => x.nome === cargoNome);
+    const row = [c.mun, cargoNome, vac, vpc, vcl, sal, ped, plei, qlei, linkPasta, hoje(), cargoFolderId];
+    if (cargoObj && cargoObj.rowIndex) {
+      await sheetsPut(`Cargos!A${cargoObj.rowIndex}:L${cargoObj.rowIndex}`, [row]);
+    } else {
+      const res = await sheetsAppend('Cargos', row);
+      const m = res.updates && res.updates.updatedRange && res.updates.updatedRange.match(/\d+$/);
+      if (cargoObj) cargoObj.rowIndex = m ? parseInt(m[0]) : 999;
+    }
+    // Upload prints se selecionados
+    if (S.prints.p1) {
+      try { await uploadToDrive(S.prints.p1, 'Print 1 - Edital.png', cargoFolderId); } catch(e) { toast('Aviso: falha ao enviar Print 1', 'gold'); }
+    }
+    if (S.prints.p2) {
+      try { await uploadToDrive(S.prints.p2, 'Print 2 - Lei.png', cargoFolderId); } catch(e) { toast('Aviso: falha ao enviar Print 2', 'gold'); }
+    }
+    // Atualizar objeto
+    const updated = { nome: cargoNome, vagasAC: vac, vagasPCD: vpc, vagasCargo: vcl, salario: sal, pagEd: ped, pagLei: plei, qtdLei: qlei, folderId: cargoFolderId, linkPasta, dataIncr: hoje(), incr: true, p1: !!S.prints.p1, p2: !!S.prints.p2 };
+    const idx = c.cargos.findIndex(x => x.nome === cargoNome);
+    if (idx >= 0) Object.assign(c.cargos[idx], updated);
+    else c.cargos.push(updated);
+    c.ok = c.cargos.every(x => x.incr) && c.cargos.length > 0;
+    S.prints = {};
+    toast('✅ Cargo incrementado!', 'ok');
+    setTimeout(() => { voltar(); renderFicha(c); }, 600);
+  } catch(err) {
+    toast('Erro: ' + err.message, 'err', 7000);
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Incremento'; }
+  }
+}
+
+// ─── UPLOAD DOCS ────────────────────────────────────────────────
+function uploadDoc(docKey, filenameOrFn, inputId) {
+  const inp = g(inputId); if (!inp) return;
+  inp.value = '';
+  inp.onchange = async (ev) => {
+    const file = ev.target.files[0]; if (!file) return;
+    const juris = gv('f-juris') || (S.concurso && S.concurso.juris) || '';
+    if (!juris) { toast('Preencha o Jurisdicionado primeiro', 'gold'); return; }
+    setDocUI(docKey, 'loading');
+    try {
+      const folderId = await getConcursoFolder(juris);
+      const name = typeof filenameOrFn === 'function' ? filenameOrFn() : filenameOrFn;
+      await uploadToDrive(file, name, folderId);
+      setDocUI(docKey, 'ok', file.name);
+      toast('📄 ' + name + ' enviado!', 'ok');
+    } catch(err) {
+      setDocUI(docKey, 'err');
+      toast('Erro no upload: ' + err.message, 'err', 6000);
+    }
+    inp.value = '';
+  };
+  inp.click();
+}
+
+function setDocUI(key, state, fname) {
+  const ua = g('ua' + key), bd = g('bd' + key), un = g('un' + key);
+  if (state === 'loading') {
+    if (ua) ua.innerHTML = '<span class="spinner" style="color:var(--gold);width:22px;height:22px;border-width:3px"></span><span class="upload-txt" style="margin-top:6px">Enviando...</span>';
+  } else if (state === 'ok') {
+    if (ua) { ua.classList.add('ok'); ua.innerHTML = '<span style="font-size:1.6rem">✅</span><span class="upload-txt">Enviado</span>'; }
+    if (bd) { bd.className = 'badge b-ok'; bd.textContent = '✅ Anexado'; }
+    if (un && fname) { un.textContent = fname; un.classList.add('vis'); }
+  } else {
+    if (ua) ua.innerHTML = '<span style="font-size:1.6rem">❌</span><span class="upload-txt">Falha — tente novamente</span>';
+    if (bd) { bd.className = 'badge b-red'; bd.textContent = '❌ Erro'; }
+  }
+}
+
+// ─── PRINTS ─────────────────────────────────────────────────────
+function handlePrint(num) {
+  const key = 'p' + num;
+  const inp = g('fi-print' + num); if (!inp) return;
+  inp.value = '';
+  inp.onchange = (ev) => {
+    const file = ev.target.files[0]; if (!file) return;
+    S.prints[key] = file;
+    const area = g('pa' + num), nome = g('pn' + num);
+    if (area) area.classList.add('ok');
+    if (nome) { nome.textContent = '✅ ' + file.name; nome.classList.add('vis'); }
+    toast('Print ' + num + ' selecionado — será enviado ao salvar', 'ok');
+    inp.value = '';
+  };
+  inp.click();
+}
+
+// ─── ADICIONAR CARGO NA FICHA ────────────────────────────────────
+async function addCargoFicha() {
+  abrirModalCargo('ficha');
+}
+
+async function salvarCargoFicha(nome) {
+  const c = S.concurso; if (!c) return;
+  if (c.cargos.find(x => x.nome === nome)) { toast('Cargo já cadastrado', 'gold'); return; }
+  c.cargos.push({ id: 'ni_' + Date.now(), nome, incr: false, vagasAC: 0, vagasPCD: 0, vagasCargo: null, salario: '', pagEd: null, pagLei: null, qtdLei: null, p1: false, p2: false });
+  const nomes = c.cargos.map(x => x.nome).join('|');
+  try { await sheetsPut(`Concursos!AB${c.rowIndex}`, [[nomes]]); } catch(e) { toast('Aviso: erro ao salvar na planilha', 'gold'); }
+  renderFicha(c);
+  toast('Cargo "' + nome + '" adicionado!', 'ok');
+}
+
+// ─── NAVEGAÇÃO ───────────────────────────────────────────────────
+function ir(id, fn) {
+  const cur = document.querySelector('.tela.ativa');
+  if (cur && cur.id !== 'tela-login') { cur.classList.remove('ativa'); cur.classList.add('saindo'); hist.push(cur.id); }
+  else if (cur) { cur.classList.remove('ativa'); hist.length = 0; }
+  const nova = g('tela-' + id);
+  if (!nova) return;
+  nova.classList.remove('saindo'); nova.classList.add('ativa');
+  if (typeof fn === 'function') fn();
+}
+function voltar() {
+  if (!hist.length) return;
+  const cur = document.querySelector('.tela.ativa');
+  if (cur) cur.classList.remove('ativa');
+  const prev = g(hist.pop());
+  if (prev) { prev.classList.remove('saindo'); prev.classList.add('ativa'); }
+}
+
+// ─── LISTA ───────────────────────────────────────────────────────
+function renderLista(f) {
+  const wrap = g('lista-wrap');
+  const b = (f || '').toLowerCase();
+  let lista = b ? S.concursos.filter(c => c.juris.toLowerCase().includes(b) || c.mun.toLowerCase().includes(b)) : S.concursos;
+  if (!lista.length) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-ico">🏛️</div><div class="empty-txt">Nenhum concurso encontrado.<br>Toque em <strong>＋</strong> para cadastrar.</div></div>';
+    return;
+  }
+  let h = '<div style="padding-top:10px;">';
+  lista.forEach(c => {
+    const nIncr = c.cargos.filter(x => x.incr).length;
+    h += `<div class="cc${c.ok ? '' : ' incompleto'}" onclick="abrirFicha('${c.id}')">
+      <div class="cc-topo"><span class="cc-nome">${e(c.juris)}</span><span class="cc-chev">›</span></div>
+      <div class="cc-mun">📍 ${e(c.mun)}</div>
+      <div class="cc-footer"><span class="cc-vara">⚖️ ${e(c.vara)}</span>
+      <span class="badge ${c.ok ? 'b-ok' : 'b-gray'}">${c.ok ? '✅ Completo' : '⏳ Andamento'}</span></div>
+      <div class="cc-info">${c.cargos.length} cargo${c.cargos.length !== 1 ? 's' : ''}${nIncr ? ` · <span style="color:var(--ok)">${nIncr} incrementado${nIncr !== 1 ? 's' : ''}</span>` : ''}</div>
+    </div>`;
+  });
+  h += '</div>';
+  wrap.innerHTML = h;
+}
+function filtrar(v) { renderLista(v.trim()); }
+
+// ─── FICHA DO CONCURSO ──────────────────────────────────────────
+function abrirFicha(id) {
+  const c = S.concursos.find(x => x.id === id); if (!c) return;
+  S.concurso = c;
+  ir('ficha', () => renderFicha(c));
+}
+function renderFicha(c) {
+  g('fh-titulo').textContent = c.mun;
+  const nIncr = c.cargos.filter(x => x.incr).length;
+  let cargosH = c.cargos.length ? c.cargos.map(cargo =>
+    `<div class="cargo-card${cargo.incr ? ' incr' : ''}" onclick="abrirCargo('${cargo.nome}')">
+      <span class="cargo-ico">${cargo.incr ? '✅' : '📋'}</span>
+      <div class="cargo-info"><div class="cargo-nome">${e(cargo.nome)}</div>
+      <div class="cargo-det">${cargo.incr ? `AC ${cargo.vagasAC} · PCD ${cargo.vagasPCD} · ${cargo.salario}` : 'Aguardando incremento'}</div></div>
+      <span class="badge ${cargo.incr ? 'b-ok' : 'b-gray'}">${cargo.incr ? 'Incrementado' : 'Pendente'}</span>
+      <span class="cargo-chev">›</span>
+    </div>`).join('') :
+    '<div class="empty" style="padding:20px"><div class="empty-ico">📋</div><div class="empty-txt">Nenhum cargo cadastrado.</div></div>';
+  g('fh-conteudo').innerHTML =
+    `<div class="resumo">
+      <div class="resumo-juris">${e(c.juris)}</div>
+      <div class="resumo-vara">⚖️ ${e(c.vara)}</div>
+      <div class="resumo-gest">👤 ${e(c.sexo)} ${e(c.gestor)}</div>
+      <div class="resumo-stats">
+        <div class="rs"><span class="rs-v">${c.cargos.length}</span><span class="rs-l">Cargos</span></div>
+        <div class="rs"><span class="rs-v" style="color:var(--ok)">${nIncr}</span><span class="rs-l">Incrementados</span></div>
+      </div>
+    </div>
+    <div class="stitle">Dados para o processo</div>
+    <div class="info-sec">${ir2('CNPJ', c.cnpj)}${ir2('Vara', c.vara)}${ir2('Gestor', c.sexo + ' ' + c.gestor)}${ir2('Sede', c.end)}</div>
+    ${c.contrP === 'S' ? `<div class="stitle">Honorários padrão</div><div class="info-sec">${ir2('Tipo', c.tipo)}${ir2('Entrada', c.entrada)}${ir2('Parcelas', c.parcelas)}${ir2('Vl. Parcela', c.valParc)}</div>` : ''}
+    <div class="stitle">Documentos</div>
+    <div class="info-sec">${ir3('Doc 04', 'Diploma do Representante Legal', '')}${ir3('Doc 07', c.d07n, c.d07l)}${ir3('Doc 08', c.d08n, c.d08l)}${ir3('Doc 09', c.d09n, c.d09l)}${ir3('Doc 10', c.d10n, c.d10l)}</div>
+    <div class="stitle">Controle TCE</div>
+    <div class="info-sec">${ir3('Tramita', c.trn, c.trl)}${ir2('Transparência', c.tpc)}</div>
+    <div class="stitle">Cargos</div>
+    ${cargosH}
+    <button class="btn-add" onclick="addCargoFicha()">＋ Adicionar cargo</button>`;
+}
+function ir2(l, v) { return `<div class="ir"><span class="ir-l">${l}</span><span class="ir-v">${e(v || '—')}</span></div>`; }
+function ir3(l, nome, link) {
+  const val = nome ? (link ? `<a href="${e(link)}" target="_blank" rel="noopener">${e(nome)} ↗</a>` : e(nome)) : '—';
+  return `<div class="ir"><span class="ir-l">${l}</span><span class="ir-v">${val}</span></div>`;
+}
+
+// ─── FICHA DO CARGO ──────────────────────────────────────────────
+function abrirCargo(nome) {
+  const c = S.concurso; if (!c) return;
+  const cargo = c.cargos.find(x => x.nome === nome); if (!cargo) return;
+  S.cargo = cargo; S.prints = {};
+  ir('cargo', () => renderCargo(cargo, c));
+}
+function renderCargo(cargo, conc) {
+  g('fc-titulo').textContent = cargo.nome;
+  const w = g('fc-conteudo');
+  if (!cargo.incr) {
+    w.innerHTML =
+      `<div class="form-sec">
+      <div class="alerta alerta-gold"><div class="alerta-tit">⚡ Incremento necessário</div>Preencha os dados específicos deste cargo. Feito uma vez, vale para todos os clientes deste cargo no concurso de ${e(conc.mun)}.</div>
+      <div class="fr2">
+        <div class="fg"><label class="fl">Vagas AC <span>*</span></label><input class="fi" id="i-vac" type="number" min="0" value="${cargo.vagasAC || ''}"></div>
+        <div class="fg"><label class="fl">Vagas PCD <span>*</span></label><input class="fi" id="i-vpc" type="number" min="0" value="${cargo.vagasPCD || ''}"></div>
+      </div>
+      <div class="fg"><label class="fl">Total vagas do cargo na lei <span>*</span></label><input class="fi" id="i-vcl" type="number" min="1" value="${cargo.vagasCargo || ''}"></div>
+      <div class="fg"><label class="fl">Salário <span>*</span></label><input class="fi" id="i-sal" type="text" placeholder="R$ 0,00" value="${e(cargo.salario || '')}" oninput="mSalario(this)"></div>
+      <div class="fr2">
+        <div class="fg"><label class="fl">Pág. no Edital <span>*</span></label><input class="fi" id="i-ped" type="number" min="1" value="${cargo.pagEd || ''}"></div>
+        <div class="fg"><label class="fl">Pág. na Lei <span>*</span></label><input class="fi" id="i-plei" type="number" min="1" value="${cargo.pagLei || ''}"></div>
+      </div>
+      <div class="fg"><label class="fl">Qtd. prevista na lei <span>*</span></label><input class="fi" id="i-qlei" type="number" min="1" value="${cargo.qtdLei || ''}"></div>
+      <div class="stitle" style="padding:4px 0 6px">Print 1 — Edital (cargo · vagas · salário)</div>
+      <span class="fhint" style="margin-bottom:4px">Mesmo print para todos os clientes deste cargo. Já anote com retângulo e seta.</span>
+      <div class="print-area" id="pa1" onclick="handlePrint(1)">
+        <span style="font-size:1.8rem">📸</span>
+        <span style="font-size:0.8rem;color:var(--gray)">Selecionar print do edital anotado</span>
+        <span class="print-nome" id="pn1"></span>
+      </div>
+      <div class="stitle" style="padding:4px 0 6px">Print 2 — Lei de Cargos (cargo · quantidade)</div>
+      <span class="fhint" style="margin-bottom:4px">Mesmo print para todos os clientes deste cargo.</span>
+      <div class="print-area" id="pa2" onclick="handlePrint(2)">
+        <span style="font-size:1.8rem">📸</span>
+        <span style="font-size:0.8rem;color:var(--gray)">Selecionar print da lei anotado</span>
+        <span class="print-nome" id="pn2"></span>
+      </div>
+      <div class="ferr" id="err-incr"></div>
+      <button class="btn-p" onclick="salvarIncr('${e(cargo.nome)}')">💾 Salvar Incremento</button>
+      </div>`;
+  } else {
+    w.innerHTML =
+      `<div class="form-sec"><div class="alerta alerta-ok"><div class="alerta-tit">✅ Cargo incrementado</div>Dados completos. Reutilizados para todos os clientes deste cargo.</div></div>
+      <div class="stitle">Dados do cargo</div>
+      <div class="info-sec">
+        ${ir2('Vagas AC', String(cargo.vagasAC))}
+        ${ir2('Vagas PCD', String(cargo.vagasPCD))}
+        ${ir2('Total na lei', String(cargo.vagasCargo || '—'))}
+        ${ir2('Salário', cargo.salario)}
+        ${ir2('Pág. Edital', String(cargo.pagEd || '—'))}
+        ${ir2('Pág. Lei', String(cargo.pagLei || '—'))}
+        ${ir2('Qtd. na lei', String(cargo.qtdLei || '—'))}
+        ${cargo.linkPasta ? ir3('Pasta Drive', 'Abrir pasta ↗', cargo.linkPasta) : ''}
+      </div>
+      <div class="stitle">Prints do cargo</div>
+      <div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">
+        <div class="doc-card"><div class="doc-hdr"><div class="doc-num">P1</div><div class="doc-info"><div class="doc-lbl">Print do Edital</div><div class="doc-sub">Cargo · Vagas · Salário</div></div><span class="badge ${cargo.p1 ? 'b-ok' : 'b-gray'}">${cargo.p1 ? '✅ Enviado' : 'Pendente'}</span></div></div>
+        <div class="doc-card"><div class="doc-hdr"><div class="doc-num">P2</div><div class="doc-info"><div class="doc-lbl">Print da Lei</div><div class="doc-sub">Cargo · Quantidade</div></div><span class="badge ${cargo.p2 ? 'b-ok' : 'b-gray'}">${cargo.p2 ? '✅ Enviado' : 'Pendente'}</span></div></div>
+      </div>
+      <div class="stitle">Dados do cliente por petição</div>
+      <div style="padding:0 16px 16px">
+        <div class="doc-card"><div class="doc-body" style="gap:12px">
+          <span style="font-size:0.82rem;color:var(--gray);line-height:1.5">Estes dados variam por cliente e são preenchidos no momento de cada petição:</span>
+          <div class="fg"><label class="fl">Classificação do cliente</label><input class="fi" id="cli-class" type="number" min="1" placeholder="Ex: 6"></div>
+          <div class="fg"><label class="fl">Página do resultado onde aparece</label><input class="fi" id="cli-pag" type="number" min="1" placeholder="Ex: 78"></div>
+          <div class="stitle" style="padding:4px 0 6px">Print 3 — Resultado (único por cliente)</div>
+          <div class="print-area" style="cursor:default;opacity:0.5">
+            <span style="font-size:1.5rem">📸</span>
+            <span style="font-size:0.78rem;color:var(--gray)">Disponível na próxima fase do sistema</span>
+          </div>
+        </div></div>
+      </div>`;
+  }
+}
+
+// ─── CADASTRO ────────────────────────────────────────────────────
+function abrirNovo() {
+  S.modo = 'novo'; S.cargosTemp = []; S.cadFolderId = null; S.contrP = false;
+  limparForm();
+  ir('cad', () => { g('cad-titulo').textContent = 'Novo Concurso'; goEtapa(1); });
+}
+function editarConcurso() {
+  if (!S.concurso) return;
+  S.modo = 'edit';
+  S.cargosTemp = S.concurso.cargos.map(x => ({ nome: x.nome }));
+  S.cadFolderId = S.concurso.folderId || null;
+  S.contrP = S.concurso.contrP === 'S';
+  preencherForm(S.concurso);
+  ir('cad', () => { g('cad-titulo').textContent = 'Editar Concurso'; goEtapa(1); });
+}
+function confirmarVoltar() { if (confirm('Sair sem salvar?')) voltar(); }
+function limparForm() {
+  ['f-juris','f-mun','f-mun-m','f-cnpj','f-vara','f-gestor','f-end',
+   'f-d07n','f-d07l','f-d08n','f-d08l','f-d09n','f-d09l','f-d10n','f-d10l',
+   'f-trn','f-trl','f-tpc','f-tpl','f-entrada','f-parcelas','f-valparc'].forEach(id => { const el = g(id); if (el) el.value = ''; });
+  g('f-sexo').value = ''; if (g('f-tipo')) g('f-tipo').value = 'A';
+  ['04','07','08','09','10'].forEach(d => resetDocUI(d));
+  atualizarToggle(false);
+}
+function preencherForm(c) {
+  ['juris','cnpj','vara','gestor','end','d07n','d07l','d08n','d08l','d09n','d09l','d10n','d10l','trn','trl','tpc','tpl'].forEach(k => {
+    const el = g('f-' + k); if (el) el.value = c[k] || '';
+  });
+  g('f-sexo').value = c.sexo || '';
+  if (g('f-tipo')) g('f-tipo').value = c.tipo || 'A';
+  if (g('f-entrada')) g('f-entrada').value = c.entrada || '';
+  if (g('f-parcelas')) g('f-parcelas').value = c.parcelas || '';
+  if (g('f-valparc')) g('f-valparc').value = c.valParc || '';
+  autoMun();
+  atualizarToggle(c.contrP === 'S');
+}
+function resetDocUI(key) {
+  const ua = g('ua'+key), bd = g('bd'+key), un = g('un'+key);
+  if (ua) { ua.classList.remove('ok'); ua.innerHTML = `<span class="upload-icon">📋</span><span class="upload-txt">Toque para anexar</span><span class="upload-nome" id="un${key}"></span>`; }
+  if (bd) { bd.className = 'badge b-gray'; bd.textContent = 'Pendente'; }
+  if (un) { un.textContent = ''; un.classList.remove('vis'); }
+}
+
+// STEPPER
+function goEtapa(n) {
+  S.etapa = n;
+  for (let i = 1; i <= 4; i++) {
+    const el = g('et' + i); if (el) el.classList.toggle('hidden', i !== n);
+    const c = g('sc' + i), l = g('sl' + i);
+    c.className = 'step-c' + (i < n ? ' feito' : i === n ? ' ativo' : '');
+    c.textContent = i < n ? '✓' : String(i);
+    l.className = 'step-l' + (i === n ? ' ativo' : '');
+    if (i < 4) { const ln = g('sln' + i); ln.className = 'step-ln' + (i < n ? ' feita' : ''); }
+  }
+  if (n === 4) renderCargosCad();
+  g('btn-vol-et').classList.toggle('hidden', n === 1);
+  g('btn-av-et').textContent = n === 4 ? '💾 Salvar Concurso' : 'Avançar →';
+  const scroll = g('cad-scroll'); if (scroll) scroll.scrollTop = 0;
+}
+function proxEtapa() { if (S.etapa === 4) { salvarConc(); return; } goEtapa(S.etapa + 1); }
+function etAnterior() { if (S.etapa > 1) goEtapa(S.etapa - 1); }
+
+// CARGOS NO FORM
+function renderCargosCad() {
+  const wrap = g('lista-cargos-cad');
+  if (!S.cargosTemp.length) { wrap.innerHTML = '<div style="padding:12px 16px 4px;font-size:0.85rem;color:var(--gray2);text-align:center">Nenhum cargo adicionado ainda.</div>'; return; }
+  wrap.innerHTML = S.cargosTemp.map((cargo, idx) =>
+    `<div class="cargo-card">
+      <span class="cargo-ico">📋</span>
+      <div class="cargo-info"><div class="cargo-nome">${e(cargo.nome)}</div></div>
+      <button onclick="rmCargo(${idx})" style="background:rgba(224,82,82,0.1);border:1px solid rgba(224,82,82,0.3);color:var(--erro);border-radius:50%;width:30px;height:30px;font-size:1rem;cursor:pointer;flex-shrink:0">✕</button>
+    </div>`).join('');
+}
+function rmCargo(idx) { S.cargosTemp.splice(idx, 1); renderCargosCad(); }
+
+// MODAL CARGO
+function abrirModalCargo(ctx) {
+  S.modalCtx = ctx || 'form';
+  g('nc-nome').value = ''; g('nc-erro').textContent = '';
+  g('modal-cargo').classList.remove('hidden');
+  setTimeout(() => { try { g('nc-nome').focus(); } catch(_) {} }, 150);
+}
+function fecharModal(e) { if (e && e.target !== g('modal-cargo')) return; g('modal-cargo').classList.add('hidden'); }
+function confirmarCargo() {
+  const nome = (g('nc-nome').value || '').trim();
+  if (!nome) { g('nc-erro').textContent = 'Informe o nome do cargo.'; return; }
+  g('modal-cargo').classList.add('hidden');
+  if (S.modalCtx === 'ficha') { salvarCargoFicha(nome); }
+  else {
+    if (S.cargosTemp.find(x => x.nome === nome)) { toast('Cargo já adicionado', 'gold'); return; }
+    S.cargosTemp.push({ nome });
+    if (S.etapa === 4) renderCargosCad();
+    toast('Cargo "' + nome + '" adicionado!', 'ok');
+  }
+}
+
+// TOGGLE CONTRATO
+function toggleContr() { atualizarToggle(!S.contrP); }
+function atualizarToggle(val) {
+  S.contrP = val;
+  const tr = g('toggle-contr'), tx = g('toggle-txt'), bf = g('bloco-fin');
+  if (!tr) return;
+  tr.classList.toggle('on', val);
+  if (tx) tx.textContent = val ? 'Sim' : 'Não';
+  if (bf) bf.classList.toggle('hidden', !val);
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────
+function autoMun(ret) {
+  const v = (g('f-juris') ? g('f-juris').value : '') || '';
+  let m = '';
+  const match = v.match(/(?:Prefeitura (?:Municipal|Estadual) de|C[aâ]mara Municipal de|Instituto [^,]+de)\s+(.+)/i);
+  if (match) m = match[1].trim();
+  else if (v.indexOf(' de ') >= 0) m = v.split(' de ').slice(-1)[0].trim();
+  else m = v;
+  if (!ret) {
+    const fm = g('f-mun'), fmm = g('f-mun-m');
+    if (fm) fm.value = m;
+    if (fmm) fmm.value = m.toUpperCase();
+  }
+  return m;
+}
+function mCNPJ(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 14);
+  v = v.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+  el.value = v;
+}
+function mSalario(el) {
+  const v = el.value.replace(/\D/g, '');
+  if (!v) { el.value = ''; return; }
+  const n = parseInt(v, 10) / 100;
+  el.value = 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function hoje() {
+  const d = new Date();
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+function g(id) { return document.getElementById(id); }
+function gv(id) { const el = g(id); return el ? (el.value || '').trim() : ''; }
+function e(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg, tipo, dur) {
+  const wrap = g('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (tipo ? ' ' + tipo : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('vis')));
+  setTimeout(() => { el.classList.remove('vis'); setTimeout(() => el.remove(), 280); }, dur || 3500);
+}
+// EVM Concursos v2
+</script>
+</body>
+</html>
