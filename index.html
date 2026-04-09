@@ -7,6 +7,7 @@
 <title>EVM — Concursos</title>
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -197,7 +198,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 <input type="file" id="fi-doc10" accept=".pdf,application/pdf" class="hidden">
 <input type="file" id="fi-print1" accept="image/*" class="hidden">
 <input type="file" id="fi-print2" accept="image/*" class="hidden">
-<input type="file" id="fi-print-aud" accept="image/*" class="hidden">
+<input type="file" id="fi-print-aud11" accept="image/*" class="hidden">
+<input type="file" id="fi-print-aud12" accept="image/*" class="hidden">
 
 <div id="toast-wrap"></div>
 
@@ -511,12 +513,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <label class="fl">Qtd. de convocações (Tramita/TCE) <span>*</span></label>
         <input class="fi" id="aud-conv" type="number" min="0" placeholder="Ex: 2">
       </div>
-      <div class="stitle" style="padding:4px 0 6px">Print do Tramita — Convocações</div>
-      <span class="fhint" style="margin-bottom:4px">Com o cargo selecionado. Substitui o anterior se refazer.</span>
-      <div class="print-area" id="pa-aud" onclick="handlePrintAud()">
+      <div class="stitle" style="padding:4px 0 6px">Doc 11 — Consulta à Folha de Pagamento</div>
+      <span class="fhint" style="margin-bottom:4px">Print com efetivos e contratados no mesmo tipo de função. Salvo como PDF.</span>
+      <div class="print-area" id="pa-aud11" onclick="handlePrintAud(11)">
+        <span style="font-size:1.8rem">📸</span>
+        <span style="font-size:0.8rem;color:var(--gray)">Selecionar print da folha de pagamento</span>
+        <span class="print-nome" id="pn-aud11"></span>
+      </div>
+      <div class="stitle" style="padding:4px 0 6px">Doc 12 — Convocações Conforme Tramita TCE PB</div>
+      <span class="fhint" style="margin-bottom:4px">Print do Tramita com o cargo selecionado. Salvo como PDF.</span>
+      <div class="print-area" id="pa-aud12" onclick="handlePrintAud(12)">
         <span style="font-size:1.8rem">📸</span>
         <span style="font-size:0.8rem;color:var(--gray)">Selecionar print do Tramita</span>
-        <span class="print-nome" id="pn-aud"></span>
+        <span class="print-nome" id="pn-aud12"></span>
       </div>
       <div class="ferr" id="err-aud"></div>
       <button class="btn-p" id="btn-salvar-aud" onclick="salvarAuditoria()">💾 Salvar Auditoria</button>
@@ -1295,7 +1304,7 @@ function toast(msg, tipo, dur) {
 function abrirAuditoria(cargoNome) {
   const c = S.concurso; if (!c) return;
   const cargo = c.cargos.find(x => x.nome === cargoNome); if (!cargo) return;
-  S.cargo = cargo; S.prints.aud = null;
+  S.cargo = cargo; S.prints.aud11 = null; S.prints.aud12 = null;
   g('aud-titulo').textContent = cargoNome;
   g('aud-efetivos').value = cargo.efetivos ?? '';
   g('aud-contratados').value = cargo.contratados ?? '';
@@ -1303,7 +1312,8 @@ function abrirAuditoria(cargoNome) {
   g('aud-folha').value = cargo.folhaMesAno || '';
   g('aud-conv').value = cargo.qtdConvocacoes ?? '';
   g('err-aud').textContent = '';
-  const pa = g('pa-aud'), pn = g('pn-aud');
+  ['pa-aud11','pa-aud12'].forEach(id => { const el = g(id); if (el) el.classList.remove('ok'); });
+  ['pn-aud11','pn-aud12'].forEach(id => { const el = g(id); if (el) { el.textContent = ''; el.classList.remove('vis'); } });
   pa.classList.remove('ok');
   pn.textContent = ''; pn.classList.remove('vis');
   // Auto-calcular total
@@ -1317,16 +1327,16 @@ function abrirAuditoria(cargoNome) {
   ir('auditoria');
 }
 
-function handlePrintAud() {
-  const inp = g('fi-print-aud'); if (!inp) return;
+function handlePrintAud(num) {
+  const inp = g('fi-print-aud' + num); if (!inp) return;
   inp.value = '';
   inp.onchange = (ev) => {
     const file = ev.target.files[0]; if (!file) return;
-    S.prints.aud = file;
-    const pa = g('pa-aud'), pn = g('pn-aud');
+    S.prints['aud' + num] = file;
+    const pa = g('pa-aud' + num), pn = g('pn-aud' + num);
     if (pa) pa.classList.add('ok');
     if (pn) { pn.textContent = '✅ ' + file.name; pn.classList.add('vis'); }
-    toast('Print selecionado — será enviado ao salvar', 'ok');
+    toast('Doc 1' + (num === 11 ? '1' : '2') + ' selecionado — será convertido para PDF ao salvar', 'ok');
     inp.value = '';
   };
   inp.click();
@@ -1350,10 +1360,17 @@ async function salvarAuditoria() {
   err.textContent = '';
   try {
     // Upload print se selecionado
-    if (S.prints.aud && cargo.folderId) {
+    if (S.prints.aud11 && cargo.folderId) {
       try {
-        await uploadToDrive(S.prints.aud, 'Doc 12 - Print Tramita Convocações.png', cargo.folderId);
-      } catch(e) { toast('Aviso: falha ao enviar print', 'gold'); }
+        const pdf11 = await imgParaPdf(S.prints.aud11);
+        await uploadToDrive(pdf11, 'Doc 11 - Consulta à Folha de Pagamento.pdf', cargo.folderId);
+      } catch(e) { toast('Aviso: falha ao enviar Doc 11 — ' + e.message, 'gold'); }
+    }
+    if (S.prints.aud12 && cargo.folderId) {
+      try {
+        const pdf12 = await imgParaPdf(S.prints.aud12);
+        await uploadToDrive(pdf12, 'Doc 12 - Convocações Conforme Tramita TCE PB.pdf', cargo.folderId);
+      } catch(e) { toast('Aviso: falha ao enviar Doc 12 — ' + e.message, 'gold'); }
     }
     // Salvar na planilha colunas M-S
     if (cargo.rowIndex) {
@@ -1361,7 +1378,7 @@ async function salvarAuditoria() {
     }
     // Atualizar objeto em memória
     Object.assign(cargo, { efetivos, contratados, totalFuncao: total, folhaMesAno: folha, qtdConvocacoes: conv, dataAuditoria: dataAud, statusAuditoria: 'Concluída' });
-    S.prints.aud = null;
+    S.prints.aud11 = null; S.prints.aud12 = null;
     toast('✅ Auditoria salva!', 'ok');
     setTimeout(() => { voltar(); renderCargo(cargo, c); }, 600);
   } catch(err2) {
@@ -1369,6 +1386,31 @@ async function salvarAuditoria() {
   } finally {
     btn.disabled = false; btn.textContent = '💾 Salvar Auditoria';
   }
+}
+
+
+async function imgParaPdf(imgFile) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Falha ao ler imagem'));
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Imagem inválida'));
+      img.onload = () => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const mmW = img.width  * 25.4 / 96;
+          const mmH = img.height * 25.4 / 96;
+          const orient = mmW > mmH ? 'l' : 'p';
+          const pdf = new jsPDF({ orientation: orient, unit: 'mm', format: [mmW, mmH] });
+          pdf.addImage(ev.target.result, 'JPEG', 0, 0, mmW, mmH, undefined, 'FAST');
+          resolve(pdf.output('blob'));
+        } catch(e) { reject(e); }
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(imgFile);
+  });
 }
 
 // EVM Concursos v2
