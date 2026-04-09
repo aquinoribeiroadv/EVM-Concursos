@@ -196,7 +196,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 <input type="file" id="fi-doc09" accept=".pdf,application/pdf" class="hidden">
 <input type="file" id="fi-doc10" accept=".pdf,application/pdf" class="hidden">
 <input type="file" id="fi-print1" accept="image/*" class="hidden">
-<input type="file" id="fi-print2" accept="image/*" class="hidden">
+<input type="file" id="fi-print-aud" accept="image/*" class="hidden">
 
 <div id="toast-wrap"></div>
 
@@ -482,6 +482,47 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   <div class="scroll pb24" id="fc-conteudo"></div>
 </div>
 
+<!-- T6: AUDITORIA DO CARGO -->
+<div id="tela-auditoria" class="tela">
+  <div class="hdr">
+    <button class="btn-voltar" onclick="voltar()">‹</button>
+    <span class="hdr-nome" id="aud-titulo">Auditoria</span>
+  </div>
+  <div class="scroll pb24">
+    <div class="form-sec">
+      <div class="alerta alerta-gold">
+        <div class="alerta-tit">📋 Dados da Folha de Pagamento</div>
+        Preencha com base na consulta ao Portal da Transparência do município.
+      </div>
+      <div class="fr2">
+        <div class="fg"><label class="fl">Servidores Efetivos <span>*</span></label><input class="fi" id="aud-efetivos" type="number" min="0" placeholder="Ex: 4"></div>
+        <div class="fg"><label class="fl">Contratados <span>*</span></label><input class="fi" id="aud-contratados" type="number" min="0" placeholder="Ex: 10"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Total na função</label>
+        <input class="fi" id="aud-total" type="text" readonly style="color:var(--gold);font-weight:700" placeholder="Calculado automaticamente">
+      </div>
+      <div class="fg">
+        <label class="fl">Mês/Ano da folha consultada <span>*</span></label>
+        <input class="fi" id="aud-folha" type="text" placeholder="Ex: setembro/2025">
+      </div>
+      <div class="fg">
+        <label class="fl">Qtd. de convocações (Tramita/TCE) <span>*</span></label>
+        <input class="fi" id="aud-conv" type="number" min="0" placeholder="Ex: 2">
+      </div>
+      <div class="stitle" style="padding:4px 0 6px">Print do Tramita — Convocações</div>
+      <span class="fhint" style="margin-bottom:4px">Com o cargo selecionado. Substitui o anterior se refazer.</span>
+      <div class="print-area" id="pa-aud" onclick="handlePrintAud()">
+        <span style="font-size:1.8rem">📸</span>
+        <span style="font-size:0.8rem;color:var(--gray)">Selecionar print do Tramita</span>
+        <span class="print-nome" id="pn-aud"></span>
+      </div>
+      <div class="ferr" id="err-aud"></div>
+      <button class="btn-p" id="btn-salvar-aud" onclick="salvarAuditoria()">💾 Salvar Auditoria</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
@@ -492,7 +533,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 // 3. Crie credenciais OAuth 2.0 > Aplicativo da Web
 // 4. Adicione a URL onde este HTML está hospedado em "Origens JavaScript autorizadas"
 // 5. Substitua o valor abaixo pelo seu Client ID
-const CLIENT_ID   = '521454805384-khosaikn3o3a1tbbp66tf1ura3qgrqd9.apps.googleusercontent.com';
+const CLIENT_ID   = 'COLE_SEU_CLIENT_ID_AQUI.apps.googleusercontent.com';
 const ROOT_FOLDER = '1t4YuhSbghSqTjIet8x9LHHsu4raEUwvP';
 const SCOPES      = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
 
@@ -659,7 +700,7 @@ async function getConcursoFolder(juris) {
 
 // ─── SHEETS SETUP ───────────────────────────────────────────────
 const HDR_CONC  = ['Município','Jurisdicionado','CNPJ','Vara','Gestor','Tratamento','Endereço','Doc07 Nome','Doc07 Link','Doc08 Nome','Doc08 Link','Doc09 Nome','Doc09 Link','Doc10 Nome','Doc10 Link','Tramita Nº','Tramita Link','Transparência Caminho','Transparência Link','Contrato Padrão','Tipo','Entrada (R$)','Parcelas','Valor Parcela (R$)','Status','Data Cadastro','ID Pasta Drive','Cargos'];
-const HDR_CARGO = ['Município','Nome do Cargo','Vagas AC','Vagas PCD','Total na Lei','Salário (R$)','Pág. Edital','Pág. Lei','Qtd. na Lei','Link Pasta Drive','Data Incremento','ID Pasta Drive'];
+const HDR_CARGO = ['Município','Nome do Cargo','Vagas AC','Vagas PCD','Total na Lei','Salário (R$)','Pág. Edital','Pág. Lei','Qtd. na Lei','Link Pasta Drive','Data Incremento','ID Pasta Drive','Efetivos','Contratados','Total Função','Mês/Ano Folha','Qtd Convocações','Data Auditoria','Status Auditoria'];
 
 async function getOrCreateSpreadsheet() {
   const q = `name='Controle de Concursos' and '${S.docsFolderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
@@ -690,7 +731,7 @@ function r(row, i) { return (row[i] || '').toString().trim(); }
 async function loadAllData() {
   const [cr, cgr] = await Promise.all([
     sheetsGet('Concursos!A2:AB5000'),
-    sheetsGet('Cargos!A2:L5000'),
+    sheetsGet('Cargos!A2:S5000'),
   ]);
   const concRows  = (cr.values  || []);
   const cargoRows = (cgr.values || []);
@@ -707,6 +748,10 @@ async function loadAllData() {
       salario: r(row,5), pagEd: parseInt(r(row,6)) || null,
       pagLei: parseInt(r(row,7)) || null, qtdLei: parseInt(r(row,8)) || null,
       linkPasta: r(row,9), dataIncr: r(row,10), folderId: r(row,11),
+      efetivos: parseInt(r(row,12)) || null, contratados: parseInt(r(row,13)) || null,
+      totalFuncao: parseInt(r(row,14)) || null, folhaMesAno: r(row,15),
+      qtdConvocacoes: parseInt(r(row,16)) || null, dataAuditoria: r(row,17),
+      statusAuditoria: r(row,18) || 'Pendente',
       incr: true, p1: true, p2: true,
     });
   });
@@ -804,13 +849,13 @@ async function salvarIncr(cargoNome) {
   const c = S.concurso; if (!c) return;
   const vac  = parseInt(gv('i-vac'))  || 0;
   const vpc  = parseInt(gv('i-vpc'))  || 0;
-  const vcl  = parseInt(gv('i-vcl'))  || null;
   const sal  = gv('i-sal');
   const ped  = parseInt(gv('i-ped'))  || null;
   const plei = parseInt(gv('i-plei')) || null;
   const qlei = parseInt(gv('i-qlei')) || null;
+  const vcl  = qlei;
   const err  = g('err-incr');
-  if (!sal || !ped || !plei || !qlei || !vcl) {
+  if (!sal || !ped || !plei || !qlei) {
     err.textContent = 'Preencha todos os campos obrigatórios.'; return;
   }
   err.textContent = '';
@@ -826,7 +871,7 @@ async function salvarIncr(cargoNome) {
     const cargoFolderId = await findOrCreateFolder(cargoNome.toUpperCase(), c.folderId);
     const linkPasta = `https://drive.google.com/drive/folders/${cargoFolderId}`;
     const cargoObj = c.cargos.find(x => x.nome === cargoNome);
-    const row = [c.mun, cargoNome, vac, vpc, vcl, sal, ped, plei, qlei, linkPasta, hoje(), cargoFolderId];
+    const row = [c.mun, cargoNome, vac, vpc, vcl, sal, ped, plei, qlei, linkPasta, hoje(), cargoFolderId, '', '', '', '', '', '', 'Pendente'];
     if (cargoObj && cargoObj.rowIndex) {
       await sheetsPut(`Cargos!A${cargoObj.rowIndex}:L${cargoObj.rowIndex}`, [row]);
     } else {
@@ -842,7 +887,7 @@ async function salvarIncr(cargoNome) {
       try { await uploadToDrive(S.prints.p2, 'Print 2 - Lei.png', cargoFolderId); } catch(e) { toast('Aviso: falha ao enviar Print 2', 'gold'); }
     }
     // Atualizar objeto
-    const updated = { nome: cargoNome, vagasAC: vac, vagasPCD: vpc, vagasCargo: vcl, salario: sal, pagEd: ped, pagLei: plei, qtdLei: qlei, folderId: cargoFolderId, linkPasta, dataIncr: hoje(), incr: true, p1: !!S.prints.p1, p2: !!S.prints.p2 };
+    const updated = { nome: cargoNome, vagasAC: vac, vagasPCD: vpc, vagasCargo: vcl, salario: sal, pagEd: ped, pagLei: plei, qtdLei: qlei, folderId: cargoFolderId, linkPasta, dataIncr: hoje(), incr: true, p1: !!S.prints.p1, p2: !!S.prints.p2, efetivos: null, contratados: null, totalFuncao: null, folhaMesAno: '', qtdConvocacoes: null, dataAuditoria: '', statusAuditoria: 'Pendente' };
     const idx = c.cargos.findIndex(x => x.nome === cargoNome);
     if (idx >= 0) Object.assign(c.cargos[idx], updated);
     else c.cargos.push(updated);
@@ -978,14 +1023,18 @@ function abrirFicha(id) {
 function renderFicha(c) {
   g('fh-titulo').textContent = c.mun;
   const nIncr = c.cargos.filter(x => x.incr).length;
-  let cargosH = c.cargos.length ? c.cargos.map(cargo =>
-    `<div class="cargo-card${cargo.incr ? ' incr' : ''}" onclick="abrirCargo('${cargo.nome}')">
+  let cargosH = c.cargos.length ? c.cargos.map(cargo => {
+    const audOk = cargo.statusAuditoria === 'Concluída';
+    const audBadge = cargo.incr ? `<span class="badge ${audOk ? 'b-ok' : 'b-red'}" style="margin-top:4px">${audOk ? '✅ Auditoria' : '🔴 Auditoria'}</span>` : '';
+    return `<div class="cargo-card${cargo.incr ? ' incr' : ''}" onclick="abrirCargo('${cargo.nome}')">
       <span class="cargo-ico">${cargo.incr ? '✅' : '📋'}</span>
       <div class="cargo-info"><div class="cargo-nome">${e(cargo.nome)}</div>
-      <div class="cargo-det">${cargo.incr ? `AC ${cargo.vagasAC} · PCD ${cargo.vagasPCD} · ${cargo.salario}` : 'Aguardando incremento'}</div></div>
+      <div class="cargo-det">${cargo.incr ? `AC ${cargo.vagasAC} · PCD ${cargo.vagasPCD} · ${cargo.salario}` : 'Aguardando incremento'}</div>
+      ${audBadge}</div>
       <span class="badge ${cargo.incr ? 'b-ok' : 'b-gray'}">${cargo.incr ? 'Incrementado' : 'Pendente'}</span>
       <span class="cargo-chev">›</span>
-    </div>`).join('') :
+    </div>`;
+  }).join('') :
     '<div class="empty" style="padding:20px"><div class="empty-ico">📋</div><div class="empty-txt">Nenhum cargo cadastrado.</div></div>';
   g('fh-conteudo').innerHTML =
     `<div class="resumo">
@@ -1032,7 +1081,6 @@ function renderCargo(cargo, conc) {
         <div class="fg"><label class="fl">Vagas AC <span>*</span></label><input class="fi" id="i-vac" type="number" min="0" value="${cargo.vagasAC || ''}"></div>
         <div class="fg"><label class="fl">Vagas PCD <span>*</span></label><input class="fi" id="i-vpc" type="number" min="0" value="${cargo.vagasPCD || ''}"></div>
       </div>
-      <div class="fg"><label class="fl">Total vagas do cargo na lei <span>*</span></label><input class="fi" id="i-vcl" type="number" min="1" value="${cargo.vagasCargo || ''}"></div>
       <div class="fg"><label class="fl">Salário <span>*</span></label><input class="fi" id="i-sal" type="text" placeholder="R$ 0,00" value="${e(cargo.salario || '')}" oninput="mSalario(this)"></div>
       <div class="fr2">
         <div class="fg"><label class="fl">Pág. no Edital <span>*</span></label><input class="fi" id="i-ped" type="number" min="1" value="${cargo.pagEd || ''}"></div>
@@ -1063,11 +1111,10 @@ function renderCargo(cargo, conc) {
       <div class="info-sec">
         ${ir2('Vagas AC', String(cargo.vagasAC))}
         ${ir2('Vagas PCD', String(cargo.vagasPCD))}
-        ${ir2('Total na lei', String(cargo.vagasCargo || '—'))}
+        ${ir2('Qtd. na lei', String(cargo.qtdLei || '—'))}
         ${ir2('Salário', cargo.salario)}
         ${ir2('Pág. Edital', String(cargo.pagEd || '—'))}
         ${ir2('Pág. Lei', String(cargo.pagLei || '—'))}
-        ${ir2('Qtd. na lei', String(cargo.qtdLei || '—'))}
         ${cargo.linkPasta ? ir3('Pasta Drive', 'Abrir pasta ↗', cargo.linkPasta) : ''}
       </div>
       <div class="stitle">Prints do cargo</div>
@@ -1075,18 +1122,21 @@ function renderCargo(cargo, conc) {
         <div class="doc-card"><div class="doc-hdr"><div class="doc-num">P1</div><div class="doc-info"><div class="doc-lbl">Print do Edital</div><div class="doc-sub">Cargo · Vagas · Salário</div></div><span class="badge ${cargo.p1 ? 'b-ok' : 'b-gray'}">${cargo.p1 ? '✅ Enviado' : 'Pendente'}</span></div></div>
         <div class="doc-card"><div class="doc-hdr"><div class="doc-num">P2</div><div class="doc-info"><div class="doc-lbl">Print da Lei</div><div class="doc-sub">Cargo · Quantidade</div></div><span class="badge ${cargo.p2 ? 'b-ok' : 'b-gray'}">${cargo.p2 ? '✅ Enviado' : 'Pendente'}</span></div></div>
       </div>
-      <div class="stitle">Dados do cliente por petição</div>
+      <div class="stitle">Auditoria</div>
       <div style="padding:0 16px 16px">
-        <div class="doc-card"><div class="doc-body" style="gap:12px">
-          <span style="font-size:0.82rem;color:var(--gray);line-height:1.5">Estes dados variam por cliente e são preenchidos no momento de cada petição:</span>
-          <div class="fg"><label class="fl">Classificação do cliente</label><input class="fi" id="cli-class" type="number" min="1" placeholder="Ex: 6"></div>
-          <div class="fg"><label class="fl">Página do resultado onde aparece</label><input class="fi" id="cli-pag" type="number" min="1" placeholder="Ex: 78"></div>
-          <div class="stitle" style="padding:4px 0 6px">Print 3 — Resultado (único por cliente)</div>
-          <div class="print-area" style="cursor:default;opacity:0.5">
-            <span style="font-size:1.5rem">📸</span>
-            <span style="font-size:0.78rem;color:var(--gray)">Disponível na próxima fase do sistema</span>
+        ${cargo.statusAuditoria === 'Concluída' ?
+          `<div class="alerta alerta-ok" style="margin-bottom:12px"><div class="alerta-tit">✅ Auditoria concluída</div>Última atualização: ${e(cargo.dataAuditoria || '—')}</div>
+          <div class="info-sec">
+            ${ir2('Efetivos', String(cargo.efetivos ?? '—'))}
+            ${ir2('Contratados', String(cargo.contratados ?? '—'))}
+            ${ir2('Total na função', String(cargo.totalFuncao ?? '—'))}
+            ${ir2('Mês/Ano folha', cargo.folhaMesAno || '—')}
+            ${ir2('Convocações', String(cargo.qtdConvocacoes ?? '—'))}
           </div>
-        </div></div>
+          <button class="btn-s" style="margin-top:12px" onclick="abrirAuditoria('${e(cargo.nome)}')">🔄 Refazer Auditoria</button>` :
+          `<div class="alerta alerta-gold" style="margin-bottom:12px"><div class="alerta-tit">🔴 Auditoria pendente</div>Preencha os dados da folha de pagamento e convocações do Tramita.</div>
+          <button class="btn-p" onclick="abrirAuditoria('${e(cargo.nome)}')">📋 Preencher Auditoria</button>`
+        }
       </div>`;
   }
 }
@@ -1240,6 +1290,86 @@ function toast(msg, tipo, dur) {
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('vis')));
   setTimeout(() => { el.classList.remove('vis'); setTimeout(() => el.remove(), 280); }, dur || 3500);
 }
+// ─── AUDITORIA ───────────────────────────────────────────────────
+function abrirAuditoria(cargoNome) {
+  const c = S.concurso; if (!c) return;
+  const cargo = c.cargos.find(x => x.nome === cargoNome); if (!cargo) return;
+  S.cargo = cargo; S.prints.aud = null;
+  g('aud-titulo').textContent = cargoNome;
+  g('aud-efetivos').value = cargo.efetivos ?? '';
+  g('aud-contratados').value = cargo.contratados ?? '';
+  g('aud-total').value = cargo.totalFuncao ? String(cargo.totalFuncao) : '';
+  g('aud-folha').value = cargo.folhaMesAno || '';
+  g('aud-conv').value = cargo.qtdConvocacoes ?? '';
+  g('err-aud').textContent = '';
+  const pa = g('pa-aud'), pn = g('pn-aud');
+  pa.classList.remove('ok');
+  pn.textContent = ''; pn.classList.remove('vis');
+  // Auto-calcular total
+  ['aud-efetivos','aud-contratados'].forEach(id => {
+    g(id).oninput = () => {
+      const ef = parseInt(g('aud-efetivos').value) || 0;
+      const ct = parseInt(g('aud-contratados').value) || 0;
+      g('aud-total').value = ef + ct > 0 ? String(ef + ct) : '';
+    };
+  });
+  ir('auditoria');
+}
+
+function handlePrintAud() {
+  const inp = g('fi-print-aud'); if (!inp) return;
+  inp.value = '';
+  inp.onchange = (ev) => {
+    const file = ev.target.files[0]; if (!file) return;
+    S.prints.aud = file;
+    const pa = g('pa-aud'), pn = g('pn-aud');
+    if (pa) pa.classList.add('ok');
+    if (pn) { pn.textContent = '✅ ' + file.name; pn.classList.add('vis'); }
+    toast('Print selecionado — será enviado ao salvar', 'ok');
+    inp.value = '';
+  };
+  inp.click();
+}
+
+async function salvarAuditoria() {
+  const cargo = S.cargo; const c = S.concurso;
+  if (!cargo || !c) return;
+  const efetivos     = parseInt(g('aud-efetivos').value);
+  const contratados  = parseInt(g('aud-contratados').value);
+  const folha        = (g('aud-folha').value || '').trim();
+  const conv         = parseInt(g('aud-conv').value);
+  const err          = g('err-aud');
+  if (isNaN(efetivos) || isNaN(contratados) || !folha || isNaN(conv)) {
+    err.textContent = 'Preencha todos os campos obrigatórios.'; return;
+  }
+  const total = efetivos + contratados;
+  const dataAud = hoje();
+  const btn = g('btn-salvar-aud');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando...';
+  err.textContent = '';
+  try {
+    // Upload print se selecionado
+    if (S.prints.aud && cargo.folderId) {
+      try {
+        await uploadToDrive(S.prints.aud, 'Doc 12 - Print Tramita Convocações.png', cargo.folderId);
+      } catch(e) { toast('Aviso: falha ao enviar print', 'gold'); }
+    }
+    // Salvar na planilha colunas M-S
+    if (cargo.rowIndex) {
+      await sheetsPut(`Cargos!M${cargo.rowIndex}:S${cargo.rowIndex}`, [[efetivos, contratados, total, folha, conv, dataAud, 'Concluída']]);
+    }
+    // Atualizar objeto em memória
+    Object.assign(cargo, { efetivos, contratados, totalFuncao: total, folhaMesAno: folha, qtdConvocacoes: conv, dataAuditoria: dataAud, statusAuditoria: 'Concluída' });
+    S.prints.aud = null;
+    toast('✅ Auditoria salva!', 'ok');
+    setTimeout(() => { voltar(); renderCargo(cargo, c); }, 600);
+  } catch(err2) {
+    toast('Erro: ' + err2.message, 'err', 7000);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Salvar Auditoria';
+  }
+}
+
 // EVM Concursos v2
 </script>
 </body>
