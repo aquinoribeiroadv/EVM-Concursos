@@ -1314,8 +1314,6 @@ function abrirAuditoria(cargoNome) {
   g('err-aud').textContent = '';
   ['pa-aud11','pa-aud12'].forEach(id => { const el = g(id); if (el) el.classList.remove('ok'); });
   ['pn-aud11','pn-aud12'].forEach(id => { const el = g(id); if (el) { el.textContent = ''; el.classList.remove('vis'); } });
-  pa.classList.remove('ok');
-  pn.textContent = ''; pn.classList.remove('vis');
   // Auto-calcular total
   ['aud-efetivos','aud-contratados'].forEach(id => {
     g(id).oninput = () => {
