@@ -9,6 +9,8 @@
 <title>EVM — Concursos</title>
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
+<!-- PDF-lib para conversão PNG→PDF do Doc 11 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -199,6 +201,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 <input type="file" id="fi-doc10" accept=".pdf,application/pdf" class="hidden">
 <input type="file" id="fi-print1" accept="image/*" class="hidden">
 <input type="file" id="fi-print2" accept="image/*" class="hidden">
+<input type="file" id="fi-print-folha" accept="image/*" class="hidden">
 <input type="file" id="fi-print-aud" accept="image/*" class="hidden">
 
 <div id="toast-wrap"></div>
@@ -513,9 +516,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <label class="fl">Qtd. de convocações (Tramita/TCE) <span>*</span></label>
         <input class="fi" id="aud-conv" type="number" min="0" placeholder="Ex: 2">
       </div>
-      <div class="stitle" style="padding:4px 0 6px">Print do Tramita — Convocações</div>
+      <div class="stitle" style="padding:4px 0 6px">Print 4 — Folha de Pagamento</div>
+      <span class="fhint" style="margin-bottom:4px">Será salvo na pasta do cargo (PNG) e enviado como Doc 11 (PDF) para todos os clientes deste cargo.</span>
+      <div class="print-area" id="pa-folha" onclick="handlePrintFolha()">
+        <span style="font-size:1.8rem">📸</span>
+        <span style="font-size:0.8rem;color:var(--gray)">Selecionar print da folha de pagamento</span>
+        <span class="print-nome" id="pn-folha"></span>
+      </div>
+      <div class="stitle" style="padding:4px 0 6px">Print 5 — Convocações Tramita</div>
       <span class="fhint" style="margin-bottom:4px">Com o cargo selecionado. Substitui o anterior se refazer.</span>
-      <div class="print-area" id="pa-aud" onclick="handlePrintAud()">
+      <div class="print-area" id="pa-aud" onclick="handlePrintTramita()">
         <span style="font-size:1.8rem">📸</span>
         <span style="font-size:0.8rem;color:var(--gray)">Selecionar print do Tramita</span>
         <span class="print-nome" id="pn-aud"></span>
@@ -539,6 +549,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 const CLIENT_ID   = '521454805384-khosaikn3o3a1tbbp66tf1ura3qgrqd9.apps.googleusercontent.com';
 const ROOT_FOLDER = '1t4YuhSbghSqTjIet8x9LHHsu4raEUwvP';
 const SCOPES      = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
+const CLIENTES_SHEET_ID = '1Tnjdrxw5h4ckdtddMNrWGlbk4DHihZTpsrsow0W686w';
 
 // ─── ESTADO ────────────────────────────────────────────────────
 const S = {
@@ -1297,7 +1308,7 @@ function toast(msg, tipo, dur) {
 function abrirAuditoria(cargoNome) {
   const c = S.concurso; if (!c) return;
   const cargo = c.cargos.find(x => x.nome === cargoNome); if (!cargo) return;
-  S.cargo = cargo; S.prints.aud = null;
+  S.cargo = cargo; S.prints.aud = null; S.prints.folha = null;
   g('aud-titulo').textContent = cargoNome;
   g('aud-efetivos').value = cargo.efetivos ?? '';
   g('aud-contratados').value = cargo.contratados ?? '';
@@ -1308,6 +1319,9 @@ function abrirAuditoria(cargoNome) {
   const pa = g('pa-aud'), pn = g('pn-aud');
   pa.classList.remove('ok');
   pn.textContent = ''; pn.classList.remove('vis');
+  const paF = g('pa-folha'), pnF = g('pn-folha');
+  if (paF) paF.classList.remove('ok');
+  if (pnF) { pnF.textContent = ''; pnF.classList.remove('vis'); }
   // Auto-calcular total
   ['aud-efetivos','aud-contratados'].forEach(id => {
     g(id).oninput = () => {
@@ -1319,7 +1333,22 @@ function abrirAuditoria(cargoNome) {
   ir('auditoria');
 }
 
-function handlePrintAud() {
+function handlePrintFolha() {
+  const inp = g('fi-print-folha'); if (!inp) return;
+  inp.value = '';
+  inp.onchange = (ev) => {
+    const file = ev.target.files[0]; if (!file) return;
+    S.prints.folha = file;
+    const pa = g('pa-folha'), pn = g('pn-folha');
+    if (pa) pa.classList.add('ok');
+    if (pn) { pn.textContent = '✅ ' + file.name; pn.classList.add('vis'); }
+    toast('Print 4 selecionado — será enviado ao salvar', 'ok');
+    inp.value = '';
+  };
+  inp.click();
+}
+
+function handlePrintTramita() {
   const inp = g('fi-print-aud'); if (!inp) return;
   inp.value = '';
   inp.onchange = (ev) => {
@@ -1328,20 +1357,54 @@ function handlePrintAud() {
     const pa = g('pa-aud'), pn = g('pn-aud');
     if (pa) pa.classList.add('ok');
     if (pn) { pn.textContent = '✅ ' + file.name; pn.classList.add('vis'); }
-    toast('Print selecionado — será enviado ao salvar', 'ok');
+    toast('Print 5 selecionado — será enviado ao salvar', 'ok');
     inp.value = '';
   };
   inp.click();
 }
 
+async function getClientFolderIds(municipio, cargoNome) {
+  try {
+    const res = await api('GET', `https://sheets.googleapis.com/v4/spreadsheets/${CLIENTES_SHEET_ID}/values/${encodeURIComponent('Clientes!A2:AA5000')}`);
+    const rows = (res.values || []);
+    const ids = [];
+    rows.forEach(row => {
+      const concurso  = (row[16] || '').trim();
+      const cargo     = (row[17] || '').trim();
+      const linkPasta = (row[26] || '').trim();
+      if (concurso === municipio && cargo === cargoNome && linkPasta) {
+        const match = linkPasta.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+        if (match) ids.push(match[1]);
+      }
+    });
+    return ids;
+  } catch(e) {
+    return [];
+  }
+}
+
+async function imgToPdfBlob(imgFile) {
+  const { PDFDocument } = PDFLib;
+  const imgBytes = await imgFile.arrayBuffer();
+  const pdfDoc = await PDFDocument.create();
+  const tipo = (imgFile.type || '').toLowerCase();
+  const isJpeg = tipo.includes('jpeg') || tipo.includes('jpg') || /\.jpe?g$/i.test(imgFile.name);
+  const img = isJpeg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes);
+  const { width, height } = img.scale(1);
+  const page = pdfDoc.addPage([width, height]);
+  page.drawImage(img, { x: 0, y: 0, width, height });
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes], { type: 'application/pdf' });
+}
+
 async function salvarAuditoria() {
   const cargo = S.cargo; const c = S.concurso;
   if (!cargo || !c) return;
-  const efetivos     = parseInt(g('aud-efetivos').value);
-  const contratados  = parseInt(g('aud-contratados').value);
-  const folha        = (g('aud-folha').value || '').trim();
-  const conv         = parseInt(g('aud-conv').value);
-  const err          = g('err-aud');
+  const efetivos    = parseInt(g('aud-efetivos').value);
+  const contratados = parseInt(g('aud-contratados').value);
+  const folha       = (g('aud-folha').value || '').trim();
+  const conv        = parseInt(g('aud-conv').value);
+  const err         = g('err-aud');
   if (isNaN(efetivos) || isNaN(contratados) || !folha || isNaN(conv)) {
     err.textContent = 'Preencha todos os campos obrigatórios.'; return;
   }
@@ -1351,19 +1414,38 @@ async function salvarAuditoria() {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando...';
   err.textContent = '';
   try {
-    // Upload print se selecionado
+    // ── Print 4 — Folha de Pagamento ────────────────────────────
+    if (S.prints.folha && cargo.folderId) {
+      try {
+        // PNG → pasta do cargo
+        await uploadToDrive(S.prints.folha, 'Print 4 - Folha de Pagamento.png', cargo.folderId);
+        // PDF → pasta de cada cliente do mesmo município + cargo
+        try {
+          const pdfBlob = await imgToPdfBlob(S.prints.folha);
+          const pdfFile = new File([pdfBlob], 'Doc 11 - Consulta à Folha de Pagamento.pdf', { type: 'application/pdf' });
+          const folderIds = await getClientFolderIds(c.mun, cargo.nome);
+          let enviados = 0;
+          for (const fid of folderIds) {
+            try { await uploadToDrive(pdfFile, 'Doc 11 - Consulta à Folha de Pagamento.pdf', fid); enviados++; } catch(_) {}
+          }
+          if (enviados > 0) toast(`📄 Doc 11 enviado para ${enviados} cliente(s)`, 'ok');
+          else if (folderIds.length === 0) toast('ℹ️ Nenhum cliente cadastrado para este cargo ainda', 'gold');
+        } catch(e2) { toast('Aviso: falha ao gerar PDF do Doc 11 — ' + e2.message, 'gold'); }
+      } catch(e) { toast('Aviso: falha ao enviar Print 4 — ' + e.message, 'gold'); }
+    }
+    // ── Print 5 — Convocações Tramita ───────────────────────────
     if (S.prints.aud && cargo.folderId) {
       try {
-        await uploadToDrive(S.prints.aud, 'Doc 12 - Print Tramita Convocações.png', cargo.folderId);
-      } catch(e) { toast('Aviso: falha ao enviar print', 'gold'); }
+        await uploadToDrive(S.prints.aud, 'Print 5 - Convocações Tramita.png', cargo.folderId);
+      } catch(e) { toast('Aviso: falha ao enviar Print 5 — ' + e.message, 'gold'); }
     }
-    // Salvar na planilha colunas M-S
+    // ── Planilha — colunas M→S ──────────────────────────────────
     if (cargo.rowIndex) {
       await sheetsPut(`Cargos!M${cargo.rowIndex}:S${cargo.rowIndex}`, [[efetivos, contratados, total, folha, conv, dataAud, 'Concluída']]);
     }
-    // Atualizar objeto em memória
+    // ── Memória ─────────────────────────────────────────────────
     Object.assign(cargo, { efetivos, contratados, totalFuncao: total, folhaMesAno: folha, qtdConvocacoes: conv, dataAuditoria: dataAud, statusAuditoria: 'Concluída' });
-    S.prints.aud = null;
+    S.prints.aud = null; S.prints.folha = null;
     toast('✅ Auditoria salva!', 'ok');
     setTimeout(() => { voltar(); renderCargo(cargo, c); }, 600);
   } catch(err2) {
@@ -1373,7 +1455,7 @@ async function salvarAuditoria() {
   }
 }
 
-// EVM Concursos v2
+// EVM Concursos v3 — Auditoria com Print 4 (Folha→PDF clientes) e Print 5 (Tramita)
 </script>
 
 <script>
