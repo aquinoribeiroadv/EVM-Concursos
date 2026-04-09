@@ -346,6 +346,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <div class="fg"><label class="fl">Valor por parcela</label><input class="fi" id="f-valparc" type="text" placeholder="R$ 0,00" oninput="mSalario(this)"></div>
         </div>
       </div>
+      <div class="fr2">
+        <div class="fg">
+          <label class="fl">Data da Homologação <span>*</span></label>
+          <input class="fi" id="f-homol" type="text" placeholder="DD/MM/AAAA" maxlength="10" oninput="mData(this);calcValidade()">
+        </div>
+        <div class="fg">
+          <label class="fl">Prazo de validade (meses) <span>*</span></label>
+          <input class="fi" id="f-prazo" type="number" min="1" max="48" placeholder="Ex: 24" oninput="calcValidade()">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Data de validade</label>
+        <input class="fi" id="f-valid" type="text" readonly style="color:var(--gold);font-weight:700" placeholder="Calculada automaticamente">
+      </div>
       <div class="ferr" id="err1"></div>
     </div>
 
@@ -713,7 +727,7 @@ async function getConcursoFolder(juris) {
 }
 
 // ─── SHEETS SETUP ───────────────────────────────────────────────
-const HDR_CONC  = ['Município','Jurisdicionado','CNPJ','Vara','Gestor','Tratamento','Endereço','Doc07 Nome','Doc07 Link','Doc08 Nome','Doc08 Link','Doc09 Nome','Doc09 Link','Doc10 Nome','Doc10 Link','Tramita Nº','Tramita Link','Transparência Caminho','Transparência Link','Contrato Padrão','Tipo','Entrada (R$)','Parcelas','Valor Parcela (R$)','Status','Data Cadastro','ID Pasta Drive','Cargos'];
+const HDR_CONC  = ['Município','Jurisdicionado','CNPJ','Vara','Gestor','Tratamento','Endereço','Doc07 Nome','Doc07 Link','Doc08 Nome','Doc08 Link','Doc09 Nome','Doc09 Link','Doc10 Nome','Doc10 Link','Tramita Nº','Tramita Link','Transparência Caminho','Transparência Link','Contrato Padrão','Tipo','Entrada (R$)','Parcelas','Valor Parcela (R$)','Status','Data Cadastro','ID Pasta Drive','Cargos','Data Homologação','Prazo (meses)','Data Validade'];
 const HDR_CARGO = ['Município','Nome do Cargo','Vagas AC','Vagas PCD','Total na Lei','Salário (R$)','Pág. Edital','Pág. Lei','Qtd. na Lei','Link Pasta Drive','Data Incremento','ID Pasta Drive','Efetivos','Contratados','Total Função','Mês/Ano Folha','Qtd Convocações','Data Auditoria','Status Auditoria'];
 
 async function getOrCreateSpreadsheet() {
@@ -791,6 +805,7 @@ async function loadAllData() {
       entrada: r(row,21), parcelas: r(row,22), valParc: r(row,23),
       status: r(row,24) || 'Ativo', dataCad: r(row,25), folderId: r(row,26),
       cargos, ok: cargos.length > 0 && cargos.every(x => x.incr),
+      homol: r(row,28), prazo: r(row,29), valid: r(row,30),
     };
   });
 }
@@ -804,6 +819,7 @@ function concToRow(c, cargosTemp) {
     c.trn, c.trl, c.tpc, c.tpl,
     c.contrP || 'N', c.tipo || '', c.entrada || '', c.parcelas || '', c.valParc || '',
     c.status || 'Ativo', c.dataCad || hoje(), c.folderId || '', nomes,
+    c.homol || '', c.prazo || '', c.valid || '',
   ];
 }
 
@@ -824,12 +840,13 @@ async function salvarConc() {
       entrada: S.contrP ? gv('f-entrada') : '',
       parcelas: S.contrP ? gv('f-parcelas') : '',
       valParc:  S.contrP ? gv('f-valparc') : '',
+      homol: gv('f-homol'), prazo: gv('f-prazo'), valid: gv('f-valid'),
       folderId: S.cadFolderId || (S.modo === 'edit' && S.concurso ? S.concurso.folderId : '') || '',
       status: 'Ativo', dataCad: hoje(),
     };
     const row = concToRow(c, S.cargosTemp);
     if (S.modo === 'edit' && S.concurso) {
-      await sheetsPut(`Concursos!A${S.concurso.rowIndex}:AB${S.concurso.rowIndex}`, [row]);
+      await sheetsPut(`Concursos!A${S.concurso.rowIndex}:AE${S.concurso.rowIndex}`, [row]);
       Object.assign(S.concurso, c);
       S.concurso.cargos = mergeCargos(S.concurso, S.cargosTemp);
       S.concurso.ok = S.concurso.cargos.length > 0 && S.concurso.cargos.every(x => x.incr);
@@ -1061,7 +1078,7 @@ function renderFicha(c) {
       </div>
     </div>
     <div class="stitle">Dados para o processo</div>
-    <div class="info-sec">${ir2('CNPJ', c.cnpj)}${ir2('Vara', c.vara)}${ir2('Gestor', c.sexo + ' ' + c.gestor)}${ir2('Sede', c.end)}</div>
+    <div class="info-sec">${ir2('CNPJ', c.cnpj)}${ir2('Vara', c.vara)}${ir2('Gestor', c.sexo + ' ' + c.gestor)}${ir2('Sede', c.end)}${c.homol ? ir2('Homologação', c.homol) : ''}${c.prazo ? ir2('Prazo', c.prazo + ' meses') : ''}${c.valid ? ir2('Validade', c.valid) : ''}</div>
     ${c.contrP === 'S' ? `<div class="stitle">Honorários padrão</div><div class="info-sec">${ir2('Tipo', c.tipo)}${ir2('Entrada', c.entrada)}${ir2('Parcelas', c.parcelas)}${ir2('Vl. Parcela', c.valParc)}</div>` : ''}
     <div class="stitle">Documentos</div>
     <div class="info-sec">${ir3('Doc 04', 'Diploma do Representante Legal', '')}${ir3('Doc 07', c.d07n, c.d07l)}${ir3('Doc 08', c.d08n, c.d08l)}${ir3('Doc 09', c.d09n, c.d09l)}${ir3('Doc 10', c.d10n, c.d10l)}</div>
@@ -1174,15 +1191,17 @@ function confirmarVoltar() { if (confirm('Sair sem salvar?')) voltar(); }
 function limparForm() {
   ['f-juris','f-mun','f-mun-m','f-cnpj','f-vara','f-gestor','f-end',
    'f-d07n','f-d07l','f-d08n','f-d08l','f-d09n','f-d09l','f-d10n','f-d10l',
-   'f-trn','f-trl','f-tpc','f-tpl','f-entrada','f-parcelas','f-valparc'].forEach(id => { const el = g(id); if (el) el.value = ''; });
+   'f-trn','f-trl','f-tpc','f-tpl','f-entrada','f-parcelas','f-valparc',
+   'f-homol','f-prazo','f-valid'].forEach(id => { const el = g(id); if (el) el.value = ''; });
   g('f-sexo').value = ''; if (g('f-tipo')) g('f-tipo').value = 'A';
   ['04','07','08','09','10'].forEach(d => resetDocUI(d));
   atualizarToggle(false);
 }
 function preencherForm(c) {
-  ['juris','cnpj','vara','gestor','end','d07n','d07l','d08n','d08l','d09n','d09l','d10n','d10l','trn','trl','tpc','tpl'].forEach(k => {
+  ['juris','cnpj','vara','gestor','end','d07n','d07l','d08n','d08l','d09n','d09l','d10n','d10l','trn','trl','tpc','tpl','homol','prazo'].forEach(k => {
     const el = g('f-' + k); if (el) el.value = c[k] || '';
   });
+  calcValidade();
   g('f-sexo').value = c.sexo || '';
   if (g('f-tipo')) g('f-tipo').value = c.tipo || 'A';
   if (g('f-entrada')) g('f-entrada').value = c.entrada || '';
@@ -1455,7 +1474,27 @@ async function salvarAuditoria() {
   }
 }
 
-// EVM Concursos v3 — Auditoria com Print 4 (Folha→PDF clientes) e Print 5 (Tramita)
+function mData(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length >= 5) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+  else if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+  el.value = v;
+}
+
+function calcValidade() {
+  const homol = (g('f-homol') ? g('f-homol').value : '').trim();
+  const prazo = parseInt(g('f-prazo') ? g('f-prazo').value : '') || 0;
+  const fv = g('f-valid'); if (!fv) return;
+  if (!homol || homol.length !== 10 || !prazo) { fv.value = ''; return; }
+  const partes = homol.split('/');
+  if (partes.length !== 3) { fv.value = ''; return; }
+  const d = parseInt(partes[0]), m = parseInt(partes[1]) - 1, a = parseInt(partes[2]);
+  if (isNaN(d) || isNaN(m) || isNaN(a)) { fv.value = ''; return; }
+  const dt = new Date(a, m + prazo, d);
+  fv.value = String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
+}
+
+// EVM Concursos v4 — Data Homologação + Prazo + Data Validade
 </script>
 
 <script>
